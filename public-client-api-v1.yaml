@@ -1,0 +1,1582 @@
+openapi: 3.0.0
+servers:
+  - url: https://www.multiregnskab.dk/open/clientapi/v1
+    description: Production server (uses live data)
+info:
+  description: |
+    This is the 'Client API' for www.multiregnskab.dk.
+    
+    Use this API to build applications that act as a specific user. In other words, this is for Multi-Regnskab customers
+    who wish to automate their own business processes.
+    
+    This API is based on access that starts with username/password. If you are providing a service such as a payroll system
+    and have customers who are also Multi-Regnskab customers, then you need our other API. 
+
+    Getting started... 
+
+    Use the /login endpoint with userName+password to get an access token. Provide this access token for other endpoints
+    in the 'Authorization' header. Also refer to description of the refreshToken endpoint.
+
+    Please note, that after the initial authentication using username/password, the application does not need username/password,
+    but can continue with token and refreshToken. This is what our iOS/Android do.
+
+    On all requests, an optional value can be provided in a header 'X-MultiRegnskabTraceId' to facilitate tracing and troubleshooting.
+  version: "1.0.10"
+  title: Multi-Regnskab Public Client API
+  contact:
+    email: info@multiregnskab.dk
+tags:
+  - name: user
+    description: Related to user
+  - name: companies
+    description: Related to companies that the user has access to
+  - name: archive
+    description: Related to archive files (files in document archive)
+  - name: registrations
+    description: Related to registrations (bookkeeping)
+  - name: customers
+    description: Related to customers (required for invoicing)
+  - name: invoices
+    description: Related to outgoing invoices
+  - name: options
+    description: Various sets of options
+
+paths:
+
+  /login:
+    post:
+      tags:
+        - user
+      summary: Used for initial authentication
+      description: |
+        This endpoint is used for initial authentication. Provides access token in response to userName+password
+      operationId: login
+      requestBody:
+        description: Authentication data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token information for use in subsequent calls
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Not authorized
+
+  /refreshToken:
+    post:
+      tags:
+        - user
+      summary: Use refresh token to get a new token
+      description: |
+        When an access token is no longer valid, call this endpoint with the access token in the Authorization header
+        and the refresh token in the json body. If the refresh token is still valid, a new token set will be returned.
+      security:
+        - UserToken: []
+      operationId: refreshToken
+      requestBody:
+        description: Refresh token to supplement the access token
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token information for use in subsequent calls
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Not authorized
+
+  /accessRequest:
+    post:
+      tags:
+        - user
+      summary: Ensure that the user has a current 'access request code' and return it
+      description: |
+        A user can be granted access to a company by having an 'access request code' generated. Such a code can then
+        be used by another user to grant request access. The 'access request code' is communicated between the users
+        via another form of trusted communication (e.g. phone) for security reasons.
+      security:
+        - UserToken: []
+      operationId: accessRequest
+      responses:
+        '200':
+          description: Response with access request code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessRequestResponse'
+        '401':
+          description: Not authorized
+
+  /tokens:
+    delete:
+      tags:
+        - user
+      summary: Invalidate/expire tokens
+      description: |
+        Use this to invalidate or expire tokens. This allows a user to invalidate all tokens for security purposes,
+        and it can be used by developers to test scenarios that would otherwise be difficult to test.
+      security:
+        - UserToken: []
+      operationId: invalidateOrExpireTokens
+      requestBody:
+        description: Specifying what actions to take on the tokens
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvalidateOrExpireTokensRequest'
+      responses:
+        '200':
+          description: Information about the number of tokens affected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidateOrExpireTokensResponse'
+        '401':
+          description: Not authorized
+
+  /user:
+    get:
+      tags:
+        - user
+      summary: Provides user related information such as name, initials and administration
+      description: |
+        Will typically be called after login, but not required. If used, a call should be made periodically - e.g. when
+        a mobile app is brought to the foreground
+      security:
+        - UserToken: []
+      operationId: getBaseUserInformation
+      responses:
+        '200':
+          description: Base user information (real name and possibly administrator info)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseUserData'
+        '401':
+          description: Not authorized
+
+    post:
+      tags:
+        - user
+      summary: Creates a new user
+      description: |
+        Creating a new user - initially without access to any companies
+      operationId: createUser
+      requestBody:
+        description: Data required for creating a new user
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '200':
+          description: Access token data and code that the new user can send to another user in order to be granted access to one or more companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '409':
+          description: User name already in use
+
+    delete:
+      tags:
+        - user
+      summary: Deletes a user account
+      description: |
+        Deletes the user account associated with the provided token. This makes it possible to both sign up and remove the created account using the api
+      security:
+        - UserToken: []
+      operationId: deleteUser
+      responses:
+        '200':
+          description: Delete completed
+        '401':
+          description: Not authorized
+
+  /companies:
+    get:
+      tags:
+        - companies
+      summary: List of companies the user has access to
+      description: |
+        This returns the list of companies that the user has access to. Can be empty. 
+        Importantly, this endpoint provides a 'companyXid' for each company and the 'companyXid' is
+        used to identify the target company for most of the endpoints in this API.
+      security:
+        - UserToken: []
+      operationId: companies
+      responses:
+        '200':
+          description: List of companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesAndAccess'
+        '401':
+          description: Not authorized
+
+  /archiveFiles:
+    get:
+      tags:
+        - archive
+      summary: List of files in the document archive
+      description: |
+        This provides id, names, etc. for a selected list of documents in the document archive. Can be empty.
+      security:
+        - UserToken: []
+      operationId: archiveFiles
+      parameters:
+        - in: query
+          name: companyXid
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Company
+        - in: query
+          name: maxLines
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            example: 100
+          description: Max number of lines to be returned
+        - in: query
+          name: folderXid
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Folder identification
+        - in: query
+          name: continuationToken
+          required: false
+          schema:
+            type: string
+          description: Continuation token
+      responses:
+        '200':
+          description: List of archiveFiles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveFiles'
+        '401':
+          description: Not authorized
+
+  /archiveFile:
+    get:
+      tags:
+        - archive
+      summary: Fetch data for one specified archive file
+      description: |
+        This provides binary content as well as metadata for a specified file in the document archive.
+      security:
+        - UserToken: []
+      operationId: archiveFile
+      parameters:
+        - in: query
+          name: companyXid
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Company
+        - in: query
+          name: archiveFileXid
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Identifier of file within company
+        - in: query
+          name: omitFileBody
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: If this parameter is given a 'true' value, the response will return fileBodyBase64 as an empty string
+      responses:
+        '200':
+          description: Archive file data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveFile'
+        '401':
+          description: Not authorized
+
+  /archiveFile/{companyXid}/{archiveFileXid}:
+    put:
+      tags:
+        - archive
+      summary: Update archive file
+      description: |
+        Use this to update an archive file (date, name, etc.). The binary file itself cannot be updated
+      security:
+        - UserToken: [ ]
+      operationId: updateArchiveFile
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+        - name: archiveFileXid
+          in: path
+          required: true
+          description: Identification of the archive file to delete
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveFileUpdate'
+      responses:
+        '200':
+          description: Delete completed
+        '404':
+          description: Archive file not found
+        '409':
+          description: This archive file is delete-protected
+        '401':
+          description: Not authorized
+
+    delete:
+      tags:
+        - archive
+      summary: Delete archive file
+      description: |
+        Use this to delete an archive file. The call will fail if the archive file is delete-protected (e.g. being
+        referenced from a registration)
+      security:
+        - UserToken: [ ]
+      operationId: deleteArchiveFile
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+        - name: archiveFileXid
+          in: path
+          required: true
+          description: Identification of the archive file to delete
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Delete completed
+        '404':
+          description: Archive file not found
+        '409':
+          description: This archive file is delete-protected
+        '401':
+          description: Not authorized
+
+
+  /filesForUseInRegistrations:
+    post:
+      tags:
+        - archive
+      summary: Upload file to be used in subsequent call to create a registration
+      description: |
+        This endpoint is ....
+      operationId: uploadFileForRegistration
+      security:
+        - UserToken: []
+      responses:
+        '200':
+          description: Identification of the uploaded file to be used in creating registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityIdentification'
+        '401':
+          description: Not authorized
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUpload'
+
+  /suggestedRegistrations:
+    post:
+      tags:
+        - registrations
+      summary: |
+        Create suggested registration that will be pending accept by user in Multi-Regnskab
+      description: |
+        TODO
+      operationId: createSuggestedRegistration
+      security:
+        - UserToken: []
+      responses:
+        '200':
+          description: Identification of the registration created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityIdentification'
+        '401':
+          description: Not authorized
+      requestBody:
+        description: TODO
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+
+  /customers/{companyXid}:
+    get:
+      tags:
+        - customers
+      summary: List of customers (used in invoicing)
+      description: |
+        This provides data for the list of customers in a company
+      security:
+        - UserToken: []
+      operationId: customers
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerList'
+        '401':
+          description: Not authorized
+
+  /customers:
+    post:
+      tags:
+        - customers
+      summary: |
+        Create a new customer
+      description: |
+        Allows for basic creation of a new customer
+      operationId: createCustomer
+      security:
+        - UserToken: []
+      responses:
+        '200':
+          description: Identification of the customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityIdentification'
+        '401':
+          description: Not authorized
+      requestBody:
+        description: Customer structure. Provide value zero for xid
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+
+  /invoices:
+    post:
+      tags:
+        - invoices
+      summary: |
+        Create a new offer/invoice/credit-note (draft)
+      description: |
+        Typically used for basic creation of an outgoing invoice, but also allows for creation of offers and 
+        credit notes. After creation, it will exist in draft mode. This is early access which does not apply
+        payment terms, etc. from customer. Also requires a product type to exist and a range of validations
+        are missing. Introduced later February 2026
+      operationId: createInvoice
+      security:
+        - UserToken: []
+      responses:
+        '200':
+          description: Identification of the invoice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityIdentification'
+        '401':
+          description: Not authorized
+      requestBody:
+        description: Invoice structure. Provide zero value for xid
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+
+  /sales:
+    post:
+      tags:
+        - sales
+      summary: |
+        BETA access. Register a sales transaction (that may not be completed) and possibly generate QR code
+      description: |
+        This is intended for registering a sale in a point-of-sales situation. The sale may not actually be completed.
+        The information can feed an invoice but is otherwise used to generate a Mobiles QR code and track the likely
+        MobilePay payment.
+      operationId: createSales
+      security:
+        - UserToken: []
+      responses:
+        '200':
+          description: Identification of the sale and possibly a QR code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesResponse'
+        '401':
+          description: Not authorized
+      requestBody:
+        description: Sales structure
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesRequest'
+
+  /productTypes/{companyXid}:
+    get:
+      tags:
+        - options
+      summary: List of available product types in the specified company
+      description: |
+        Product types control finance bookings and vat for invoice lines. Each invoice line requires a
+        product type which is identified by a productTypeXid
+      security:
+        - UserToken: []
+      operationId: productTypes
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of product types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductTypes'
+        '401':
+          description: Not authorized
+
+  /unitsOfMeasure/{language}:
+    get:
+      tags:
+        - options
+      summary: List of available units of measure  (used on invoice lines)
+      description: |
+        E.g. EA for what would be 'stk.' in Danish.
+      parameters:
+        - in: path
+          name: language
+          required: true
+          schema:
+            type: string
+          description: Language - should 'da' or 'en'
+      security:
+        - UserToken: []
+      operationId: unitsOfMeasure
+      responses:
+        '200':
+          description: List of units of measure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitsOfMeasure'
+        '401':
+          description: Not authorized
+
+components:
+  securitySchemes:
+    UserToken:
+      type: http
+      scheme: bearer
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+          example: info@multiregnskab.dk
+        password:
+          type: string
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    CreateUserResponse:
+      type: object
+      required:
+        - tokenResponse
+        - codeForAccessRequest
+      properties:
+        tokenResponse:
+          $ref: '#/components/schemas/TokenResponse'
+        codeForAccessRequest:
+          type: string
+          example: ABC123
+
+    TokenResponse:
+      type: object
+      required:
+        - token
+        - tokenExpires
+        - refreshToken
+      properties:
+        token:
+          type: string
+        tokenExpires:
+          type: string
+          example: 2021-09-27T23:59:59.999
+        refreshToken:
+          type: string
+
+    InvalidateOrExpireTokensRequest:
+      type: object
+      required:
+        - applyToAllTokensByUser
+        - invalidateNow
+        - expireAccessTokenNow
+        - expireRefreshTokenNow
+      properties:
+        applyToAllTokensByUser:
+          type: boolean
+        invalidateNow:
+          type: boolean
+        expireAccessTokenNow:
+          type: boolean
+        expireRefreshTokenNow:
+          type: boolean
+
+    InvalidateOrExpireTokensResponse:
+      type: object
+      required:
+        - tokensAffected
+      properties:
+        tokensAffected:
+          type: integer
+          format: int32
+
+    AccessRequestResponse:
+      type: object
+      required:
+        - accessRequestCode
+      properties:
+        accessRequestCode:
+          type: string
+          example: ABC123
+
+    BaseUserData:
+      type: object
+      properties:
+        userName:
+          type: string
+          example: info@multiregnskab.dk
+        realName:
+          type: string
+          example: Peter Petersen
+        administratorXid:
+          type: integer
+          format: int64
+          example: 123456789
+        administratorName:
+          type: string
+          example: Regnskabsmesteren
+        administratorRole:
+          type: string
+          example: SUPER_USER
+
+    CreateUserRequest:
+      type: object
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+          description: e-mail address that will be used as user name. Will be lowercased. Max 70 chars.
+          example: info@multiregnskab.dk
+        password:
+          type: string
+          description: Password must be provided in plain text here but will be "salted" and "hashed"
+
+    Registration:
+      type: object
+      required:
+        - companyXid
+        - date
+        - description
+      properties:
+        companyXid:
+          description: Xid of company that the registration belongs to
+          type: integer
+          format: int64
+          example: 123456
+        date:
+          type: string
+          example: 2021-12-31
+        description:
+          type: string
+        debitCreditlines:
+          type: array
+          description: Lines with finance account, vat and amount
+          items:
+            $ref: '#/components/schemas/DebitCreditLine'
+        filesToAttachXids:
+          type: array
+          description: References to files. Maximum number is 3
+          items:
+            $ref: '#/components/schemas/EntityIdentification'
+
+    CompaniesAndAccess:
+      type: object
+      required:
+        - companiesAndAccessList
+        - lastCompanies
+      properties:
+        companiesAndAccessList:
+          type: array
+          description: Company ids, names and access information
+          items:
+            $ref: '#/components/schemas/CompanyAndAccess'
+        lastCompanies:
+          type: array
+          description: |
+            Company xId's of the last companies accessed by the user. Client application should typically 'select' the
+            first company in the array and if the array is empty select the first entry in companiesAndAccessList. Note
+            that both arrays will be empty if the user has not been granted access to any companies.
+          items:
+            type: integer
+            format: int64
+            example: 123456789
+
+    CompanyAndAccess:
+      type: object
+      required:
+        - xid
+        - name
+        - cvr
+        - allowDocumentsAdd
+        - allowDocumentsEdit
+        - allowDocumentsView
+      properties:
+        xid:
+          type: integer
+          format: int64
+          example: 123456789
+        name:
+          type: string
+          example: My Company ApS
+        cvr:
+          type: string
+          example: 11223344
+        allowDocumentsAdd:
+          type: boolean
+        allowDocumentsEdit:
+          type: boolean
+        allowDocumentsView:
+          type: boolean
+
+    EntityIdentification:
+      type: object
+      required:
+        - xid
+      properties:
+        xid:
+          type: integer
+          format: int64
+          example: 123456789
+
+    DebitCreditLine:
+      type: object
+      required:
+        - accountNumber
+        - amount
+      properties:
+        accountNumber:
+          type: string
+          example: 3020
+        vatCode:
+          type: string
+          example: DKI25
+        amount:
+          type: string
+          example: "9.999,99"
+
+    ArchiveFiles:
+      type: object
+      required:
+        - archiveFilesList
+      properties:
+        archiveFilesList:
+          type: array
+          description: Company ids, names and access information
+          items:
+            $ref: '#/components/schemas/ArchiveFileLine'
+        continuationToken:
+          type: string
+          description: if the number of files exceeds maxLines from request a continuation token is provided for a new request
+
+    ArchiveFileLine:
+      type: object
+      required:
+        - xid
+        - id
+      properties:
+        xid:
+          type: integer
+          format: int64
+          example: 123456789
+        id:
+          type: integer
+          format: int64
+          example: 123456789
+        date:
+          type: string
+          example: 2021-12-31
+          minLength: 10
+          maxLength: 10
+        name:
+          type: string
+          example: Receipt from 7-eleven
+          minLength: 1
+          maxLength: 250
+        timestampLastUpdate:
+          type: string
+          example: 2021-12-31T15:30:00.000
+          minLength: 23
+          maxLength: 23
+
+    ArchiveFile:
+      type: object
+      required:
+        - companyXid
+        - archiveFileXid
+        - date
+        - contentType
+        - fileName
+        - friendlyFilename
+        - fileBodyBase64
+      properties:
+        companyXid:
+          description: Xid of company that the file belongs to
+          type: integer
+          format: int64
+          example: 123456
+        archiveFileXid:
+          description: Xid of the file
+          type: integer
+          format: int64
+          example: 123456
+        fileBodyBase64:
+          description: Base64 encoded file contents
+          type: string
+        plainText:
+          description: Optional plain text version of the file
+          type: string
+        contentType:
+          description: E.g. 'application/pdf', 'image/png', etc.
+          type: string
+          maxLength: 150
+        fileName:
+          description: A file name typically having a suffix such as .pdf or .png
+          type: string
+          maxLength: 250
+        friendlyFilename:
+          description: A (possibly) 'user friendly' name for the file
+          type: string
+          maxLength: 250
+        date:
+          type: string
+          description: The date associated with the file
+          example: 2021-12-31
+        einvoice:
+          $ref: '#/components/schemas/Einvoice'
+        comments:
+          type: array
+          description: User-provided comments about the file
+          items:
+            $ref: '#/components/schemas/ArchiveFileComment'
+
+    ArchiveFileComment:
+      type: object
+      required:
+        - dateTime
+        - userName
+        - comment
+      properties:
+        dateTime:
+          type: string
+          description: The timestamp associated with the comment
+          example: 2022-03-31T15:26:53.970
+        userName:
+          description: The username of the author of the comment
+          type: string
+          maxLength: 70
+        realName:
+          description: The real name of the author of the comment. Note that this can be null
+          type: string
+          maxLength: 60
+        userInitials:
+          description: Best effort initials. Note that this can be null
+          type: string
+          maxLength: 3
+        comment:
+          description: A comment about the file
+          type: string
+          maxLength: 1000
+
+    Einvoice:
+      type: object
+      required:
+        - invoice
+        - creditNote
+        - number
+        - documentDate
+        - currency
+        - exclVatAmount
+        - vatBasisAmount
+        - vatAmount
+        - inclVatAmount
+        - acceptedApplicationResponseSent
+        - rejectedApplicationResponseSent
+        - accountingSupplier
+        - accountingCustomer
+        - lines
+        - paymentMeans
+        - additionalDocuments
+      properties:
+        invoice:
+          type: boolean
+        creditNote:
+          type: boolean
+        number:
+          type: string
+        documentDate:
+          type: string
+        deliveryDate:
+          type: string
+        orderReferenceId:
+          type: string
+        note:
+          type: string
+        dueDate:
+          type: string
+        currency:
+          type: string
+        exclVatAmount:
+          type: string
+        vatBasisAmount:
+          type: string
+        vatAmount:
+          type: string
+        inclVatAmount:
+          type: string
+        usesApplicationResponse:
+          type: boolean
+        acceptedApplicationResponseSent:
+          type: boolean
+        rejectedApplicationResponseSent:
+          type: boolean
+        accountingSupplier:
+          $ref: '#/components/schemas/EinvoiceParty'
+        accountingCustomer:
+          $ref: '#/components/schemas/EinvoiceParty'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/EinvoiceLine'
+        paymentMeans:
+          type: array
+          items:
+            $ref: '#/components/schemas/EinvoicePaymentMeans'
+        additionalDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EinvoiceAdditionalDocument'
+
+    EinvoicePaymentMeans:
+      type: object
+      required:
+        - paymentChannelType
+        - paymentChannelDescription
+        - paymentDueDate
+      properties:
+        paymentChannelType:
+          type: string
+        paymentChannelDescription:
+          type: string
+        paymentDueDate:
+          type: string
+        paymentNote:
+          type: string
+        branchNumber:
+          type: string
+        accountNumber:
+          type: string
+        instructionId:
+          type: string
+        paymentId:
+          type: string
+        creditAccountAccountId:
+          type: string
+
+    EinvoiceAdditionalDocument:
+      type: object
+      required:
+        - index
+        - name
+        - fileAttachment
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        fileAttachment:
+          type: boolean
+        mimeCode:
+          type: string
+
+    EinvoiceParty:
+      type: object
+      required:
+        - name
+        - endpointScheme
+        - endpointId
+        - addressFormatCode
+        - streetName
+        - cityName
+        - postalZone
+        - countryCode
+      properties:
+        name:
+          type: string
+        legalEntityIdentifier:
+          type: string
+        endpointScheme:
+          type: string
+        endpointId:
+          type: string
+        addressFormatCode:
+          type: string
+        streetName:
+          type: string
+        buildingNumber:
+          type: string
+        cityName:
+          type: string
+        postalZone:
+          type: string
+        countryCode:
+          type: string
+        contact:
+          type: string
+
+    EinvoiceLine:
+      type: object
+      required:
+        - id
+        - itemName
+        - unitCode
+        - quantity
+        - itemPrice
+        - lineExtensionAmount
+      properties:
+        id:
+          type: string
+        itemName:
+          type: string
+        unitCode:
+          type: string
+        quantity:
+          type: string
+        itemPrice:
+          type: string
+        lineExtensionAmount:
+          type: string
+        note:
+          type: string
+        taxSchemeName:
+          type: string
+        taxPercent:
+          type: string
+        taxAmount:
+          type: string
+
+    ArchiveFileUpdate:
+      type: object
+      required:
+        - date
+        - friendlyFilename
+      properties:
+        date:
+          type: string
+          description: The date associated with the file
+          example: 2021-12-31
+        friendlyFilename:
+          description: A 'user friendly' name for the file
+          type: string
+          maxLength: 250
+        comment:
+          description: A new comment with notes about the file contents. If not adding new comment then provide null value
+          type: string
+          maxLength: 1000
+
+    FileUpload:
+      type: object
+      required:
+        - companyXid
+        - fileBodyBase64
+      properties:
+        companyXid:
+          description: Xid of company that the file should be stored for
+          type: integer
+          format: int64
+          example: 123456
+        fileBodyBase64:
+          description: base64 encoded file contents
+          type: string
+        contentType:
+          description: E.g. 'application/pdf', 'image/png', etc.
+          type: string
+          maxLength: 150
+        fileName:
+          description: A file name typically having a suffix such as .pdf or .png. If no fileName is provided, one will be assigned server-side
+          type: string
+          maxLength: 250
+        friendlyFilename:
+          description: A 'friendly' file name can be provided so while fileName could easily be something like IMG001234.PNG, friendlyFileName could be 'Bakery receipt'
+          type: string
+          maxLength: 250
+        date:
+          type: string
+          description: If no date is provided, the file will get 'todays date'.
+          example: 2021-12-31
+        keepHiddenUntilRegistration:
+          type: boolean
+          description: By default, the file will not be visible to users until referenced when creating a new registration. Set to false to make the file appear in the inbox.
+          default: true
+        comment:
+          type: string
+          description: Provides a way for the user to add an initial comment to the file
+          maxLength: 1000
+        recognizedTextElements:
+          type: array
+          description: Result of text recognition performed client side
+          items:
+            $ref: '#/components/schemas/RecognizedText'
+
+    RecognizedText:
+      type: object
+      required:
+        - xPosition
+        - yPosition
+        - text
+      properties:
+        xPosition:
+          description: x position of recognized text (increases from left to right)
+          type: number
+          format: double
+        yPosition:
+          description: y position of recognized text (increases from bottom to top)
+          type: number
+          format: double
+        width:
+          description: width of bounding box
+          type: number
+          format: double
+        height:
+          description: height of bounding box
+          type: number
+          format: double
+        confidence:
+          description: Confidence of text recognition (0 to 1)
+          type: number
+          format: float
+        text:
+          description: Recognized text
+          type: string
+
+    # Common in both APIs
+    CustomerList:
+      type: object
+      properties:
+        customers:
+          type: array
+          xml:
+            name: customers
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Customer'
+
+    # Common in both APIs
+    Customer:
+      type: object
+      required:
+        - companyXid
+        - xid
+        - entityVersion
+        - customerName
+        - currencyCode
+        - address1
+        - zipCode
+        - city
+        - countryCode
+      properties:
+        companyXid:
+          type: integer
+          format: int64
+          example: 123456789
+        xid:
+          type: integer
+          format: int64
+          example: 234567890
+        entityVersion:
+          type: integer
+          format: int64
+          example: 345678901
+        customerName:
+          type: string
+          maxLength: 150
+        customerNumber:
+          type: string
+          maxLength: 20
+        privatePerson:
+          description: true for private customer - false for business customers
+          type: boolean
+        companyIdentifier:
+          description: E.g. CVR number for Danish business customers
+          type: string
+          maxLength: 20
+        address1:
+          type: string
+          maxLength: 80
+        address2:
+          type: string
+          maxLength: 80
+        address3:
+          type: string
+          maxLength: 80
+        zipCode:
+          type: string
+          maxLength: 10
+        city:
+          type: string
+          maxLength: 80
+        countryCode:
+          type: string
+          maxLength: 2
+          example: DK
+        phone:
+          type: string
+          maxLength: 20
+        invoiceAtt:
+          description: Attention person when invoicing
+          type: string
+          maxLength: 80
+        invoiceEmail:
+          description: Default e-mail recipient for invoices
+          type: string
+          maxLength: 60
+        currencyCode:
+          type: string
+          maxLength: 3
+          example: DKK
+        languageCode:
+          description: LanguageCode that determines language on invoices and in e-mails
+          $ref: '#/components/schemas/LanguageCode'
+          example: DA
+        paymentTermsType:
+          $ref: '#/components/schemas/PaymentTermsType'
+        paymentTermsDays:
+          type: integer
+          format: int
+          example: 20
+        electronicInvoice:
+          description: Set true if customer is to receive e-invoices
+          type: boolean
+        electronicInvoiceDestinationType:
+          description: Required if electronicInvoice is true
+          $ref: '#/components/schemas/ElectronicInvoiceDestinationType'
+        electronicInvoiceAddress:
+          description: Required if electronicInvoice is true
+          type: string
+          maxLength: 15
+
+    # Common in both APIs
+    Invoice:
+      type: object
+      required:
+        - companyXid
+        - invoiceXid
+        - customerXid
+        - invoiceDate
+        - lines
+      properties:
+        companyXid:
+          type: integer
+          format: int64
+          example: 123456789
+        invoiceXid:
+          description: Identification of the invoice. Provide the value zero for new invoices.
+          type: integer
+          format: int64
+          example: 123456789
+        customerXid:
+          description: Identication of the invoice recipient
+          type: integer
+          format: int64
+          example: 123456789
+        date:
+          description: The effective invoice date. When crating an invoice, this value must represent a value within a open fiscal year
+          type: string
+          maxLength: 10
+          example: 2026-01-31
+        title:
+          type: string
+          maxLength: 100
+          example: Assistance in January 2026
+        creditNote:
+          type: boolean
+          default: false
+        offer:
+          type: boolean
+          default: false
+        linesHaveProductId:
+          type: boolean
+          default: false
+        linesHaveNumberAndPriceEach:
+          type: boolean
+          default: false
+        reverseCharge:
+          description: Will determine whether to show 'reverse charge' on the invoice
+          type: boolean
+          default: false
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLine'
+
+    # Common in both APIs
+    InvoiceLine:
+      type: object
+      required:
+        - lineNo
+        - lineText
+        - amount
+        - productTypeXid
+      properties:
+        lineNo:
+          description: Determines sorting of lines. Start with 0
+          type: integer
+          format: int32
+          example: 1
+        lineText:
+          description: Item text
+          type: string
+          maxLength: 100
+        lineNote:
+          description: More detailed description for the line item
+          type: string
+          maxLength: 1200
+        numberOfUnits:
+          description: Number of items sold
+          type: string
+          example: "100 or 1.200,5"
+        unitOfMeasureCode:
+          description: Unit of measure related to numberOfUnits. See list returned by /unitsOfMeasure for valid values
+          type: string
+          example: EA
+        priceEach:
+          description: The price of each 'unit'. Multiply numberOfUnits with this to get line amount
+          type: string
+          example: "33,95"
+        amount:
+          description: Amount for the line (before possible VAT)
+          type: string
+          example: "3.35,00"
+        productTypeXid:
+          description: |
+            Identification of the product type for the invoice line. It is required for determining finance booking
+            and application of VAT
+          type: integer
+          format: int64
+          example: 123456789
+
+    SalesRequest:
+      type: object
+      required:
+        - companyXid
+        - customerXid
+        - amount
+      properties:
+        companyXid:
+          type: integer
+          format: int64
+          example: 123456789
+        customerXid:
+          type: integer
+          format: int64
+          example: 123456789
+        amount:
+          description: The amount (including vat if applied)
+          type: string
+          example: "9.999,99"
+        comment:
+          description: Optional comment for own reference
+          type: string
+          example: "Changed address to Bygaden 1"
+        generateMobilePayQrCode:
+          description: Set true to have the response include a MobilePay QR code
+          default: false
+          type: boolean
+
+    SalesResponse:
+      type: object
+      required:
+        - companyXid
+        - saleXid
+        - qrCodeBase64
+      properties:
+        companyXid:
+          description: Xid of company that the sale belongs to
+          type: integer
+          format: int64
+          example: 123456
+        saleXid:
+          description: Xid of the sale
+          type: integer
+          format: int64
+          example: 123456
+        qrCodeBase64:
+          description: Base64 encoded QR code
+          type: string
+
+    ProductTypes:
+      type: object
+      description: A list of product types
+      required:
+        - ptList
+      properties:
+        ptList:
+          type: array
+          description: List of product types
+          items:
+            $ref: '#/components/schemas/ProductType'
+
+    ProductType:
+      type: object
+      description:  |
+        A product type controls finance bookings and vat for invoice lines. Each product
+        type is uniquely identified by its productTypeXid
+      required:
+        - productTypeXid
+        - typeName
+      properties:
+        productTypeXid:
+          description: Identification of the product type. Used on invoice lines
+          type: integer
+          format: int64
+          example: 123456789
+        typeName:
+          description: Name of the product type.
+          type: string
+          example: Salg af ydelser
+
+    UnitsOfMeasure:
+      type: object
+      required:
+        - uomList
+      properties:
+        uomList:
+          type: array
+          description: List of units of measure
+          items:
+            $ref: '#/components/schemas/UnitOfMeasure'
+
+    UnitOfMeasure:
+      type: object
+      required:
+        - uomCode
+        - singularis
+        - pluralis
+      properties:
+        uomCode:
+          type: string
+          example: EA
+        singularis:
+          type: string
+          example: litre
+        pluralis:
+          type: string
+          example: litres
+
+    # Common in both APIs
+    LanguageCode:
+      type: string
+      enum:
+        - DA
+        - EN
+
+    # Common in both APIs
+    PaymentTermsType:
+      type: string
+      enum:
+        - RUNNING_MONTH
+        - NET
+        - NET_CASH
+        - ALREADY_PAID
+
+    # Common in both APIs
+    ElectronicInvoiceDestinationType:
+      type: string
+      enum:
+        - DK_GLN
+        - DK_CVR
+        - DK_PNUMMER
+        - DK_SENUMMER
+        - PEPPOL
