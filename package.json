@@ -9,7 +9,8 @@
     "build": "bun build src/index.ts --target node --outfile dist/index.js && chmod +x dist/index.js",
     "dev": "bun run src/index.ts",
     "prepublishOnly": "bun run build",
-    "generate-api": "openapi-typescript public-client-api-v1.yaml -o src/api/types.ts"
+    "generate-api": "openapi-typescript public-client-api-v1.yaml -o src/api/types.ts",
+    "prepare": "bun run build"
   },
   "dependencies": {
     "commander": "^12.0.0",
