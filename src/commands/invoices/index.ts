@@ -1,6 +1,5 @@
 import { createArea } from '../../lib/area.js'
 import { setup as createSetup, create } from './create.js'
-import { setup as productTypesSetup, productTypes } from './product-types.js'
 import { setup as unitsOfMeasureSetup, unitsOfMeasure } from './units-of-measure.js'
 
 export const invoicesArea = createArea({
@@ -17,13 +16,14 @@ Lines are provided as a JSON file via --lines.
 Required fields per line:
   lineText          Description of the line item
   amount            Amount before VAT (e.g. "5000" or "1.200,50")
-  productTypeXid    ID of the product type (run mr invoices product-types --company <xid> to find)
+  productTypeXid    ID of the product type (run mr products product-types --company <xid> to find)
 
 Optional fields per line:
   lineNote          Additional description
   numberOfUnits     Quantity (e.g. "10" or "2,5")
   unitOfMeasureCode Unit code (e.g. "EA" - run mr invoices units-of-measure to find)
   priceEach         Price per unit
+  productXid        Product ID (run mr products list --company <xid> to find)
 
 Example lines.json:
 [
@@ -44,13 +44,6 @@ Example lines.json:
 ]`,
       setup: createSetup,
       action: create,
-    },
-    {
-      name: 'product-types',
-      description: 'List available product types',
-      info: 'Lists all product types for the given company. The product type ID is required for each invoice line and controls finance booking and VAT.',
-      setup: productTypesSetup,
-      action: productTypes,
     },
     {
       name: 'units-of-measure',

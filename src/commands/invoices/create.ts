@@ -12,6 +12,7 @@ interface InvoiceLine {
   numberOfUnits?: string
   unitOfMeasureCode?: string
   priceEach?: string
+  productXid?: number
 }
 
 interface CreateOptions {
@@ -98,6 +99,7 @@ export async function create(options: CreateOptions, cmd: Command) {
         ...(line.numberOfUnits && { numberOfUnits: line.numberOfUnits }),
         ...(line.unitOfMeasureCode && { unitOfMeasureCode: line.unitOfMeasureCode }),
         ...(line.priceEach && { priceEach: line.priceEach }),
+        ...(line.productXid && { productXid: line.productXid }),
       })),
       ...(options.title && { title: options.title }),
     },

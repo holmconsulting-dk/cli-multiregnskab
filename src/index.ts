@@ -4,6 +4,8 @@ import { userArea } from './commands/user/index.js'
 import { companiesArea } from './commands/companies/index.js'
 import { invoicesArea } from './commands/invoices/index.js'
 import { customersArea } from './commands/customers/index.js'
+import { bankArea } from './commands/bank/index.js'
+import { productsArea } from './commands/products/index.js'
 
 const program = new Command()
 
@@ -16,5 +18,7 @@ program.addCommand(userArea)
 program.addCommand(companiesArea)
 program.addCommand(invoicesArea)
 program.addCommand(customersArea)
+program.addCommand(bankArea)
+program.addCommand(productsArea)
 
 program.parse()

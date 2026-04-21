@@ -21,7 +21,7 @@ info:
     but can continue with token and refreshToken. This is what our iOS/Android do.
 
     On all requests, an optional value can be provided in a header 'X-MultiRegnskabTraceId' to facilitate tracing and troubleshooting.
-  version: "1.0.10"
+  version: "1.0.13"
   title: Multi-Regnskab Public Client API
   contact:
     email: info@multiregnskab.dk
@@ -37,7 +37,11 @@ tags:
   - name: customers
     description: Related to customers (required for invoicing)
   - name: invoices
-    description: Related to outgoing invoices
+    description: Related to outgoing sales invoices
+  - name: bank
+    description: Related to bank transactions
+  - name: products
+    description: Related to product types and products for use on outgoing sales invoices
   - name: options
     description: Various sets of options
 
@@ -402,7 +406,9 @@ paths:
         - archive
       summary: Upload file to be used in subsequent call to create a registration
       description: |
-        This endpoint is ....
+        To create a 'suggested registration' with one or more files attached, those files must first be uploaded to
+        Multi-Regnskab using this endpoint. An identification is returned and that identification is then included in
+        the 'filesToAttachXids' array in the call to /suggestedRegistrations.
       operationId: uploadFileForRegistration
       security:
         - UserToken: []
@@ -442,7 +448,7 @@ paths:
         '401':
           description: Not authorized
       requestBody:
-        description: TODO
+        description: The data structure to turn into a registration
         required: true
         content:
           application/json:
@@ -566,10 +572,39 @@ paths:
             schema:
               $ref: '#/components/schemas/SalesRequest'
 
+  /bankBalances/{companyXid}:
+    get:
+      tags:
+        - bank
+      summary: Returns a list of the latest bank balances
+      description: |
+        Use of this endpoint requires an agreement where Multi-Regnskab daily (and automatically) fetches
+        the current bank balances of all bank accounts configured in the company
+      security:
+        - UserToken: []
+      operationId: bankBalances
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of bank balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankBalances'
+        '401':
+          description: Not authorized
+
   /productTypes/{companyXid}:
     get:
       tags:
-        - options
+        - products
       summary: List of available product types in the specified company
       description: |
         Product types control finance bookings and vat for invoice lines. Each invoice line requires a
@@ -592,6 +627,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductTypes'
+        '401':
+          description: Not authorized
+
+  /products/{companyXid}:
+    get:
+      tags:
+        - products
+      summary: List of products in the specified company
+      description: |
+        A product can (but need not) be applied on lines of outgoing sales invoices.
+        A product is identifier by a productXid
+      security:
+        - UserToken: []
+      operationId: products
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Products'
         '401':
           description: Not authorized
 
@@ -761,6 +825,14 @@ components:
           example: 2021-12-31
         description:
           type: string
+        supplierXid:
+          type: integer
+          format: int64
+          example: 123456789
+        customerXid:
+          type: integer
+          format: int64
+          example: 123456789
         debitCreditlines:
           type: array
           description: Lines with finance account, vat and amount
@@ -886,6 +958,7 @@ components:
           minLength: 1
           maxLength: 250
         timestampLastUpdate:
+          description: Timestamp (CET timezone)
           type: string
           example: 2021-12-31T15:30:00.000
           minLength: 23
@@ -951,7 +1024,7 @@ components:
       properties:
         dateTime:
           type: string
-          description: The timestamp associated with the comment
+          description: The timestamp associated with the comment (CET timezone)
           example: 2022-03-31T15:26:53.970
         userName:
           description: The username of the author of the comment
@@ -1415,6 +1488,14 @@ components:
           type: integer
           format: int32
           example: 1
+        productXid:
+          description: |
+            Optional reference to product. When creating an invoice line the following attributes will be set from
+            the product: productTypeXid, lineText, unitOfMeasureCode, priceEach.
+            Also, amount will be set as priceEach * numberOfUnits
+          type: integer
+          format: int64
+          example: 123456789
         lineText:
           description: Item text
           type: string
@@ -1496,6 +1577,69 @@ components:
           description: Base64 encoded QR code
           type: string
 
+    BankBalances:
+      type: object
+      description: A list of bank balances
+      required:
+        - bbList
+      properties:
+        bbList:
+          type: array
+          description: List of bank balances
+          items:
+            $ref: '#/components/schemas/BankBalance'
+
+    BankBalance:
+      type: object
+      description:  |
+        A bank balance reflects the amount available on a given bank account at a specific time.
+        There are different types of balances available with names such as 'ITAV' (Interim available),
+        'ITBD' (Interim Booked) and 'FWAV' (Forward Available). This relates to questions such as 
+        'should the balance include a credit facility on the account' and 'should the balance include
+        or exclude committed future transactions'.
+      required:
+        - bankAccountXid
+        - bankAccountName
+        - balanceType
+        - balanceAmount
+        - currency
+      properties:
+        bankAccountXid:
+          description: Identification of the bank account in Multi-Regnskab
+          type: integer
+          format: int64
+          example: 333444555
+        bankAccountName:
+          description: Name of the bank account in Multi-Regnskab
+          type: string
+          example: Main bank DKK
+        balanceType:
+          description: The balance type (see endpoint description)
+          type: string
+          example: ITAV
+        bban:
+          description: Bank account identification (Danish)
+          type: string
+          example: 99992222333344
+        iban:
+          description: Bank account identification (International)
+          type: string
+          example: DK5000400440116243
+        balanceAmount:
+          description: The amount
+          type: string
+          example: 9.999,99
+        currency:
+          description: Currency code
+          type: string
+          example: DKK
+        timestamp:
+          description: The time the balance was fetched from the bank (CET timezone)
+          type: string
+          example: 2026-03-05T15:30:00.000
+          minLength: 23
+          maxLength: 23
+
     ProductTypes:
       type: object
       description: A list of product types
@@ -1526,6 +1670,85 @@ components:
           description: Name of the product type.
           type: string
           example: Salg af ydelser
+
+    Products:
+      type: object
+      description: A list of products
+      required:
+        - productList
+      properties:
+        productList:
+          type: array
+          description: List of products
+          items:
+            $ref: '#/components/schemas/Product'
+
+    Product:
+      type: object
+      description:  |
+        A product can (but need not) be applied on lines of outgoing sales invoices.
+        A product is technically identified by a productXid, but the id intended for presentation
+        on invoices, etc. is 'productId'
+      required:
+        - productXid
+        - productTypeXid
+        - productName
+        - unitOfMeasureCode
+        - prices
+      properties:
+        productXid:
+          description: Technical identification of the product. Used when referencing a product in the API
+          type: integer
+          format: int64
+          example: 123456789
+        productId:
+          description: Identification of the product for presentation purposes (for humans)
+          type: string
+          example: P2345
+          maxLength: 30
+        productName:
+          description: Name of the product
+          type: string
+          example: Subscription, One month
+          maxLength: 100
+        description:
+          description: Additional (and optional) extra description
+          type: string
+          example: This covers a one month subscription for the Abc solution
+          maxLength: 250
+        productTypeXid:
+          description: |
+            Identification of the product type for the product line. It is required for determining finance booking
+            and application of VAT
+          type: integer
+          format: int64
+          example: 123456789
+        unitOfMeasureCode:
+          description: Unit of measure. See list returned by /unitsOfMeasure for valid values
+          type: string
+          example: EA
+        prices:
+          type: array
+          description: List of prices (different currencies). At present (2026-03), only the first entry is used
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PriceAndCurrency'
+
+    PriceAndCurrency:
+      type: object
+      required:
+        - price
+        - currencyCode
+      properties:
+        price:
+          description: A price
+          type: string
+          example: "33,95"
+        currencyCode:
+          description: A currency code (ISO 4217)
+          type: string
+          maxLength: 3
+          example: DKK
 
     UnitsOfMeasure:
       type: object

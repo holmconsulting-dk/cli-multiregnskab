@@ -215,7 +215,9 @@ export interface paths {
         put?: never;
         /**
          * Upload file to be used in subsequent call to create a registration
-         * @description This endpoint is ....
+         * @description To create a 'suggested registration' with one or more files attached, those files must first be uploaded to
+         *     Multi-Regnskab using this endpoint. An identification is returned and that identification is then included in
+         *     the 'filesToAttachXids' array in the call to /suggestedRegistrations.
          */
         post: operations["uploadFileForRegistration"];
         delete?: never;
@@ -329,6 +331,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bankBalances/{companyXid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Returns a list of the latest bank balances
+         * @description Use of this endpoint requires an agreement where Multi-Regnskab daily (and automatically) fetches
+         *     the current bank balances of all bank accounts configured in the company
+         */
+        get: operations["bankBalances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/productTypes/{companyXid}": {
         parameters: {
             query?: never;
@@ -342,6 +365,27 @@ export interface paths {
          *     product type which is identified by a productTypeXid
          */
         get: operations["productTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/products/{companyXid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List of products in the specified company
+         * @description A product can (but need not) be applied on lines of outgoing sales invoices.
+         *     A product is identifier by a productXid
+         */
+        get: operations["products"];
         put?: never;
         post?: never;
         delete?: never;
@@ -441,6 +485,16 @@ export interface components {
             /** @example 2021-12-31 */
             date: string;
             description: string;
+            /**
+             * Format: int64
+             * @example 123456789
+             */
+            supplierXid?: number;
+            /**
+             * Format: int64
+             * @example 123456789
+             */
+            customerXid?: number;
             /** @description Lines with finance account, vat and amount */
             debitCreditlines?: components["schemas"]["DebitCreditLine"][];
             /** @description References to files. Maximum number is 3 */
@@ -506,7 +560,10 @@ export interface components {
             date?: string;
             /** @example Receipt from 7-eleven */
             name?: string;
-            /** @example 2021-12-31T15:30:00.000 */
+            /**
+             * @description Timestamp (CET timezone)
+             * @example 2021-12-31T15:30:00.000
+             */
             timestampLastUpdate?: string;
         };
         ArchiveFile: {
@@ -543,7 +600,7 @@ export interface components {
         };
         ArchiveFileComment: {
             /**
-             * @description The timestamp associated with the comment
+             * @description The timestamp associated with the comment (CET timezone)
              * @example 2022-03-31T15:26:53.970
              */
             dateTime: string;
@@ -795,6 +852,14 @@ export interface components {
              * @example 1
              */
             lineNo: number;
+            /**
+             * Format: int64
+             * @description Optional reference to product. When creating an invoice line the following attributes will be set from
+             *     the product: productTypeXid, lineText, unitOfMeasureCode, priceEach.
+             *     Also, amount will be set as priceEach * numberOfUnits
+             * @example 123456789
+             */
+            productXid?: number;
             /** @description Item text */
             lineText: string;
             /** @description More detailed description for the line item */
@@ -870,6 +935,61 @@ export interface components {
             /** @description Base64 encoded QR code */
             qrCodeBase64: string;
         };
+        /** @description A list of bank balances */
+        BankBalances: {
+            /** @description List of bank balances */
+            bbList: components["schemas"]["BankBalance"][];
+        };
+        /**
+         * @description A bank balance reflects the amount available on a given bank account at a specific time.
+         *     There are different types of balances available with names such as 'ITAV' (Interim available),
+         *     'ITBD' (Interim Booked) and 'FWAV' (Forward Available). This relates to questions such as
+         *     'should the balance include a credit facility on the account' and 'should the balance include
+         *     or exclude committed future transactions'.
+         */
+        BankBalance: {
+            /**
+             * Format: int64
+             * @description Identification of the bank account in Multi-Regnskab
+             * @example 333444555
+             */
+            bankAccountXid: number;
+            /**
+             * @description Name of the bank account in Multi-Regnskab
+             * @example Main bank DKK
+             */
+            bankAccountName: string;
+            /**
+             * @description The balance type (see endpoint description)
+             * @example ITAV
+             */
+            balanceType: string;
+            /**
+             * @description Bank account identification (Danish)
+             * @example 99992222333344
+             */
+            bban?: string;
+            /**
+             * @description Bank account identification (International)
+             * @example DK5000400440116243
+             */
+            iban?: string;
+            /**
+             * @description The amount
+             * @example 9.999,99
+             */
+            balanceAmount: string;
+            /**
+             * @description Currency code
+             * @example DKK
+             */
+            currency: string;
+            /**
+             * @description The time the balance was fetched from the bank (CET timezone)
+             * @example 2026-03-05T15:30:00.000
+             */
+            timestamp?: string;
+        };
         /** @description A list of product types */
         ProductTypes: {
             /** @description List of product types */
@@ -891,6 +1011,65 @@ export interface components {
              * @example Salg af ydelser
              */
             typeName: string;
+        };
+        /** @description A list of products */
+        Products: {
+            /** @description List of products */
+            productList: components["schemas"]["Product"][];
+        };
+        /**
+         * @description A product can (but need not) be applied on lines of outgoing sales invoices.
+         *     A product is technically identified by a productXid, but the id intended for presentation
+         *     on invoices, etc. is 'productId'
+         */
+        Product: {
+            /**
+             * Format: int64
+             * @description Technical identification of the product. Used when referencing a product in the API
+             * @example 123456789
+             */
+            productXid: number;
+            /**
+             * @description Identification of the product for presentation purposes (for humans)
+             * @example P2345
+             */
+            productId?: string;
+            /**
+             * @description Name of the product
+             * @example Subscription, One month
+             */
+            productName: string;
+            /**
+             * @description Additional (and optional) extra description
+             * @example This covers a one month subscription for the Abc solution
+             */
+            description?: string;
+            /**
+             * Format: int64
+             * @description Identification of the product type for the product line. It is required for determining finance booking
+             *     and application of VAT
+             * @example 123456789
+             */
+            productTypeXid: number;
+            /**
+             * @description Unit of measure. See list returned by /unitsOfMeasure for valid values
+             * @example EA
+             */
+            unitOfMeasureCode: string;
+            /** @description List of prices (different currencies). At present (2026-03), only the first entry is used */
+            prices: components["schemas"]["PriceAndCurrency"][];
+        };
+        PriceAndCurrency: {
+            /**
+             * @description A price
+             * @example 33,95
+             */
+            price: string;
+            /**
+             * @description A currency code (ISO 4217)
+             * @example DKK
+             */
+            currencyCode: string;
         };
         UnitsOfMeasure: {
             /** @description List of units of measure */
@@ -1353,7 +1532,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        /** @description TODO */
+        /** @description The data structure to turn into a registration */
         requestBody: {
             content: {
                 "application/json": components["schemas"]["Registration"];
@@ -1504,6 +1683,36 @@ export interface operations {
             };
         };
     };
+    bankBalances: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identification of company */
+                companyXid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of bank balances */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankBalances"];
+                };
+            };
+            /** @description Not authorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     productTypes: {
         parameters: {
             query?: never;
@@ -1523,6 +1732,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductTypes"];
+                };
+            };
+            /** @description Not authorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    products: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identification of company */
+                companyXid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of products */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Products"];
                 };
             };
             /** @description Not authorized */
