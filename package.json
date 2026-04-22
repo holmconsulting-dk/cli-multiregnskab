@@ -10,7 +10,7 @@
     "dev": "bun run src/index.ts",
     "prepublishOnly": "bun run build",
     "generate-api": "openapi-typescript public-client-api-v1.yaml -o src/api/types.ts",
-    "prepare": "bun install && bun run build"
+    "prepare": "bun run build"
   },
   "dependencies": {
     "commander": "^12.0.0",
