@@ -23,8 +23,7 @@ Optional fields per line:
   numberOfUnits     Quantity (e.g. 1, 2, 2.5)
   unitOfMeasureCode Unit code (e.g. "DAY", "EA" - run mr invoices units-of-measure to find)
   priceEach         Price per unit — also set amount to the same total value
-  productXid        Product ID — only use if the product has a productTypeXid assigned in the system;
-                    if unsure, use productTypeXid directly instead
+  productXid        Rarely needed. Does NOT replace productTypeXid — both must be provided if used.
 
 Notes:
   - Use --lines-have-number-and-price to show quantity and unit price columns on the printed invoice

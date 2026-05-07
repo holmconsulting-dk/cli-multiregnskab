@@ -75,7 +75,7 @@ export async function create(options: CreateOptions, cmd: Command) {
     const line = lines![i]
     if (!line.lineText) fail(cmd, `Line ${i}: missing required field "lineText"`)
     if (!line.amount) fail(cmd, `Line ${i}: missing required field "amount"`)
-    if (!line.productTypeXid) fail(cmd, `Line ${i}: missing required field "productTypeXid"`)
+    if (!line.productTypeXid) fail(cmd, `Line ${i}: missing required field "productTypeXid". Run mr products product-types --company <xid> to find valid IDs. Note: productXid does not replace productTypeXid.`)
   }
 
   const client = createClient()
