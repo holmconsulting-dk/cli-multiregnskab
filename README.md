@@ -69,6 +69,4 @@ Download `mr-windows-x64.exe` from the [releases page](https://github.com/holmco
 
 ```sh
 mr --help
-mr <area> info         # e.g. mr invoices info
-mr <area> <command> info  # e.g. mr invoices create info
 ```
