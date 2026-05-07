@@ -6,7 +6,7 @@
     "mr": "./dist/index.js"
   },
   "scripts": {
-    "build": "bun build src/index.ts --target node --outfile dist/index.js && chmod +x dist/index.js",
+    "build": "bun build src/index.ts --target node --define '__VERSION__=\"dev\"' --outfile dist/index.js && chmod +x dist/index.js",
     "dev": "bun run src/index.ts",
     "prepublishOnly": "bun run build",
     "generate-api": "openapi-typescript public-client-api-v1.yaml -o src/api/types.ts",

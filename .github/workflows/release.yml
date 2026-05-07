@@ -22,10 +22,11 @@ jobs:
 
       - name: Build binaries
         run: |
-          bun build --compile --minify --target=bun-darwin-arm64  src/index.ts --outfile dist/mr-macos-arm64
-          bun build --compile --minify --target=bun-darwin-x64    src/index.ts --outfile dist/mr-macos-x64
-          bun build --compile --minify --target=bun-linux-x64     src/index.ts --outfile dist/mr-linux-x64
-          bun build --compile --minify --target=bun-windows-x64   src/index.ts --outfile dist/mr-windows-x64.exe
+          VERSION="${GITHUB_REF_NAME}"
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-darwin-arm64  src/index.ts --outfile dist/mr-macos-arm64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-darwin-x64    src/index.ts --outfile dist/mr-macos-x64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-linux-x64     src/index.ts --outfile dist/mr-linux-x64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-windows-x64   src/index.ts --outfile dist/mr-windows-x64.exe
 
       - name: Create release
         uses: softprops/action-gh-release@v2

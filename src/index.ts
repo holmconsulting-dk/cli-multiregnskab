@@ -7,12 +7,14 @@ import { customersArea } from './commands/customers/index.js'
 import { bankArea } from './commands/bank/index.js'
 import { productsArea } from './commands/products/index.js'
 
+declare const __VERSION__: string
+
 const program = new Command()
 
 program
   .name('mr')
   .description('Multiregnskab CLI')
-  .version('0.1.0')
+  .version(__VERSION__)
   .option('--verbose', 'print raw API error response on failure')
 
 program.addCommand(userArea)
