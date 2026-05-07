@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
+import { apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
   setupCompanyOption(cmd)
@@ -16,8 +17,7 @@ export async function list(search: string | undefined, options: { company?: stri
   })
 
   if (error || !data) {
-    console.error('Failed to retrieve customers.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve customers.', error)
   }
 
   let customers = data.customers ?? []

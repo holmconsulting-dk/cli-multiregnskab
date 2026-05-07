@@ -13,6 +13,7 @@ program
   .name('mr')
   .description('Multiregnskab CLI')
   .version('0.1.0')
+  .option('--verbose', 'print raw API error response on failure')
 
 program.addCommand(userArea)
 program.addCommand(companiesArea)

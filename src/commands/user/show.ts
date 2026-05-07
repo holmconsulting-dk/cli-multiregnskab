@@ -1,6 +1,8 @@
+import { Command } from 'commander'
 import { createClient, readAuth } from '../../api/client.js'
+import { apiError } from '../../lib/error.js'
 
-export async function show() {
+export async function show(_options: unknown, cmd: Command) {
   const auth = readAuth()
   if (!auth?.token) {
     console.error('Not logged in. Run: mr user login')
@@ -11,8 +13,7 @@ export async function show() {
   const { data, error } = await client.GET('/user')
 
   if (error || !data) {
-    console.error('Failed to retrieve user information.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve user information.', error)
   }
 
   console.log(`Username:  ${data.userName ?? '-'}`)

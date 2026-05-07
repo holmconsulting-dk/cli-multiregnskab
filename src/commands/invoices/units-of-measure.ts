@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
-import { fail } from '../../lib/error.js'
+import { fail, apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
   cmd.option('--lang <code>', 'language for unit names (DA | EN)', 'DA')
@@ -18,8 +18,7 @@ export async function unitsOfMeasure(options: { lang: string }, cmd: Command) {
   })
 
   if (error || !data) {
-    console.error('Failed to retrieve units of measure.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve units of measure.', error)
   }
 
   const units = data.uomList

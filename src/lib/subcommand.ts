@@ -43,6 +43,9 @@ export function createSubCommand(config: SubCommandConfig): Command {
             console.log(`  ${opt.flags.padEnd(maxLen + 2)}${opt.description}${def}`)
           }
         }
+        console.log()
+        console.log('Global options:')
+        console.log('  --verbose  Print raw API error response on failure')
       })
   )
 

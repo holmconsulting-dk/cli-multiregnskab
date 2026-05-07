@@ -24,6 +24,9 @@ export function createArea(config: AreaConfig): Command {
         }
         console.log()
         console.log(`Run 'mr ${config.name} <command> info' for details on a specific command.`)
+        console.log()
+        console.log('Global options:')
+        console.log('  --verbose  Print raw API error response on failure')
       })
   )
 

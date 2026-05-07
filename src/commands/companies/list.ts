@@ -1,12 +1,13 @@
+import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
+import { apiError } from '../../lib/error.js'
 
-export async function list() {
+export async function list(_options: unknown, cmd: Command) {
   const client = createClient()
   const { data, error } = await client.GET('/companies')
 
   if (error || !data) {
-    console.error('Failed to retrieve companies.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve companies.', error)
   }
 
   const companies = data.companiesAndAccessList
