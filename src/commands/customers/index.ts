@@ -17,7 +17,36 @@ export const customersArea = createArea({
     {
       name: 'create',
       description: 'Create a new customer',
-      info: 'Creates a new customer for the given company. Required fields are name, currency, address, zip, city, country, and lang. Electronic invoicing fields are required together if enabled.',
+      info: `Creates a new customer for the given company.
+
+Required options:
+  --name            Customer name
+  --currency        Currency code, e.g. DKK
+  --address1        Address line 1
+  --zip             Zip/postal code
+  --city            City
+  --country         Country code, e.g. DK
+  --lang            Language for invoices: DA or EN
+  --payment-terms   Payment terms: RUNNING_MONTH | NET | NET_CASH | ALREADY_PAID
+
+Customer type:
+  Default is business customer. Add --private for private persons.
+  This affects how the customer appears on invoices.
+
+Electronic invoicing (all three required together if used):
+  --einvoice
+  --einvoice-type   DK_GLN | DK_CVR | DK_PNUMMER | DK_SENUMMER | PEPPOL
+  --einvoice-address
+
+Example — private person:
+  mr customers create --company <xid> --name "Hans Andersen" --currency DKK \\
+    --address1 "Markvejen 20" --zip "8000" --city "Aarhus" --country DK \\
+    --lang DA --payment-terms NET --private
+
+Example — business customer:
+  mr customers create --company <xid> --name "Acme ApS" --currency DKK \\
+    --address1 "Industrivej 1" --zip "2100" --city "Copenhagen" --country DK \\
+    --lang DA --payment-terms NET --cvr 12345678`,
       setup: createSetup,
       action: create,
     },

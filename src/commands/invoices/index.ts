@@ -15,15 +15,21 @@ Lines are provided as a JSON file via --lines.
 
 Required fields per line:
   lineText          Description of the line item
-  amount            Amount before VAT (e.g. "5000" or "1.200,50")
+  amount            Amount before VAT — ALWAYS required, even when priceEach and numberOfUnits are provided
   productTypeXid    ID of the product type (run mr products product-types --company <xid> to find)
 
 Optional fields per line:
   lineNote          Additional description
-  numberOfUnits     Quantity (e.g. "10" or "2,5")
-  unitOfMeasureCode Unit code (e.g. "EA" - run mr invoices units-of-measure to find)
-  priceEach         Price per unit
-  productXid        Product ID (run mr products list --company <xid> to find)
+  numberOfUnits     Quantity (e.g. 1, 2, 2.5)
+  unitOfMeasureCode Unit code (e.g. "DAY", "EA" - run mr invoices units-of-measure to find)
+  priceEach         Price per unit — also set amount to the same total value
+  productXid        Product ID — only use if the product has a productTypeXid assigned in the system;
+                    if unsure, use productTypeXid directly instead
+
+Notes:
+  - Use --lines-have-number-and-price to show quantity and unit price columns on the printed invoice
+  - Use --title to set the invoice title (recommended)
+  - productTypeXid is a number, not a string
 
 Example lines.json:
 [
@@ -33,12 +39,11 @@ Example lines.json:
     "productTypeXid": 987654
   },
   {
-    "lineText": "Travel expenses",
-    "lineNote": "Train Copenhagen-Aarhus",
-    "numberOfUnits": "2",
-    "unitOfMeasureCode": "EA",
-    "priceEach": "125",
-    "amount": "250",
+    "lineText": "Equipment rental",
+    "numberOfUnits": 1,
+    "unitOfMeasureCode": "DAY",
+    "priceEach": "4000",
+    "amount": "4000",
     "productTypeXid": 987655
   }
 ]`,
