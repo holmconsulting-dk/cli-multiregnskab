@@ -8,13 +8,14 @@ import { bankArea } from './commands/bank/index.js'
 import { productsArea } from './commands/products/index.js'
 
 declare const __VERSION__: string
+const version = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
 
 const program = new Command()
 
 program
   .name('mr')
   .description('Multiregnskab CLI')
-  .version(__VERSION__)
+  .version(version)
   .option('--verbose', 'print raw API error response on failure')
 
 program.addCommand(userArea)
