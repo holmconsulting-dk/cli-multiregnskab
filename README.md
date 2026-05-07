@@ -1,53 +1,55 @@
 # cli-multiregnskab
 
-A command-line interface for the [Multiregnskab](https://multiregnskab.dk) accounting API.
+A command-line interface for the [Multiregnskab](https://multiregnskab.dk) accounting API. Installed as `mr`.
 
-The CLI is installed as `mr` and provides commands for managing companies, customers, and invoices.
+## Prerequisites
 
-## Commands
-
-```
-mr user login          # Authenticate with your Multiregnskab credentials
-mr user logout         # Remove stored credentials
-mr user show           # Show current user info
-
-mr companies list      # List accessible companies
-mr companies info      # Show command help
-
-mr customers list      # List customers for a company
-mr customers create    # Create a new customer
-mr customers info      # Show command help
-
-mr invoices create     # Create an invoice, offer, or credit note
-mr invoices product-types     # List available product types
-mr invoices units-of-measure  # List available units of measure
-mr invoices info       # Show command help
-```
-
-Credentials are stored in `~/.config/mr/auth.json`. Access tokens are refreshed automatically.
-
-## Installation
-
-Install globally using Bun:
-
-```sh
-bun add -g --trust git+ssh://git@github.com/holmconsulting-dk/cli-multiregnskab.git#first-draft
-```
+[Bun](https://bun.sh)
 
 ## Development
 
-**Prerequisites:** [Bun](https://bun.sh)
-
 ```sh
 bun install       # Install dependencies
-bun run dev       # Run CLI from source (e.g. bun run dev user login)
-bun run build     # Compile TypeScript to dist/
+bun run dev       # Run CLI from source, e.g: bun run dev user login
+bun run build     # Compile to dist/index.js
 ```
 
-To regenerate TypeScript types from the OpenAPI spec:
+## Updating the API
+
+The CLI is generated against `public-client-api-v1.yaml`. When the API spec changes:
+
+1. Replace `public-client-api-v1.yaml` with the new version
+2. Regenerate TypeScript types:
+   ```sh
+   bun run generate-api
+   ```
+3. Update any commands affected by the changes
+4. Build and verify: `bun run build`
+
+## Releasing
+
+Releases are built and published automatically by GitHub Actions when a tag is pushed:
 
 ```sh
-bun run generate-api
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-The types are generated from `public-client-api-v1.yaml` into `src/api/types.ts`.
+This produces binaries for macOS (arm64/x64), Linux (x64), and Windows (x64), attached to a GitHub release. The version embedded in the binary comes from the tag name.
+
+## Installation (end users)
+
+Download the binary for your platform from the [releases page](https://github.com/holmconsulting-dk/cli-multiregnskab/releases) and make it executable:
+
+```sh
+chmod +x mr-macos-arm64
+xattr -d com.apple.quarantine mr-macos-arm64  # macOS only, if downloaded via browser
+```
+
+## Usage
+
+```sh
+mr --help
+mr <area> info         # e.g. mr invoices info
+mr <area> <command> info  # e.g. mr invoices create info
+```
