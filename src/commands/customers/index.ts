@@ -27,7 +27,8 @@ Required options:
   --city            City
   --country         Country code, e.g. DK
   --lang            Language for invoices: DA or EN
-  --payment-terms   Payment terms: RUNNING_MONTH | NET | NET_CASH | ALREADY_PAID
+  --payment-terms   Payment terms type: RUNNING_MONTH | NET | NET_CASH | ALREADY_PAID
+  --payment-days    Number of days for the payment term (e.g. 30) — separate from --payment-terms
 
 Customer type:
   Default is business customer. Add --private for private persons.

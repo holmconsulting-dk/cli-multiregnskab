@@ -10,14 +10,14 @@ export const productsArea = createArea({
     {
       name: 'list',
       description: 'List products',
-      info: 'Lists all products for the given company. Shows product ID, name, unit of measure, and price.',
+      info: 'Lists all products for the given company. Shows productXid, productId, name, unit of measure, and price. Use this when building invoice lines — it gives you unit and price in addition to the product type ID.',
       setup: listSetup,
       action: list,
     },
     {
       name: 'product-types',
       description: 'List available product types',
-      info: 'Lists all product types for the given company. The product type ID is required for each invoice line and controls finance booking and VAT.',
+      info: 'Lists product type IDs and names only. The productTypeXid is required for each invoice line and controls finance booking and VAT. Use mr products list if you also need unit of measure or price.',
       setup: productTypesSetup,
       action: productTypes,
     },
