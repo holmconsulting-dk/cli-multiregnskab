@@ -37,19 +37,30 @@ git push origin v1.0.0
 
 This produces binaries for macOS (arm64/x64), Linux (x64), and Windows (x64), attached to a GitHub release. The version embedded in the binary comes from the tag name.
 
-## Installation (end users)
+## Installation
 
-Download the binary for your platform from the [releases page](https://github.com/holmconsulting-dk/cli-multiregnskab/releases) and make it executable:
+Download the binary for your platform from the [releases page](https://github.com/holmconsulting-dk/cli-multiregnskab/releases), or use `curl`:
 
+**macOS (Apple Silicon)**
 ```sh
-chmod +x mr-macos-arm64
-xattr -d com.apple.quarantine mr-macos-arm64  # macOS only, if downloaded via browser
+curl -fsSL https://github.com/holmconsulting-dk/cli-multiregnskab/releases/latest/download/mr-macos-arm64 -o /usr/local/bin/mr
+chmod +x /usr/local/bin/mr
+xattr -d com.apple.quarantine /usr/local/bin/mr
 ```
 
-## Usage
-
+**macOS (Intel)**
 ```sh
-mr --help
-mr <area> info         # e.g. mr invoices info
-mr <area> <command> info  # e.g. mr invoices create info
+curl -fsSL https://github.com/holmconsulting-dk/cli-multiregnskab/releases/latest/download/mr-macos-x64 -o /usr/local/bin/mr
+chmod +x /usr/local/bin/mr
+xattr -d com.apple.quarantine /usr/local/bin/mr
 ```
+
+**Linux (x64)**
+```sh
+curl -fsSL https://github.com/holmconsulting-dk/cli-multiregnskab/releases/latest/download/mr-linux-x64 -o /usr/local/bin/mr
+chmod +x /usr/local/bin/mr
+```
+
+**Windows (x64)**
+
+Download `mr-windows-x64.exe` from the [releases page](https://github.com/holmconsulting-dk/cli-multiregnskab/releases) and add it to your PATH.
