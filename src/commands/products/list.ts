@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
+import { apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
   setupCompanyOption(cmd)
@@ -15,11 +16,10 @@ export async function list(options: { company?: string }, cmd: Command) {
   })
 
   if (error || !data) {
-    console.error('Failed to retrieve products.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve products.', error)
   }
 
-  const products = data.products
+  const products = data.productList
   if (products.length === 0) {
     console.log('No products found.')
     return

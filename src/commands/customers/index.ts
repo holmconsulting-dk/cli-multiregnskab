@@ -17,7 +17,7 @@ export const customersArea = createArea({
     {
       name: 'create',
       description: 'Create a new customer',
-      info: 'Creates a new customer for the given company. Required fields are name, currency, address, zip, city, and country. Electronic invoicing fields are required together if enabled.',
+      info: 'Creates a new customer for the given company. Required fields are name, currency, address, zip, city, country, and lang. Electronic invoicing fields are required together if enabled.',
       setup: createSetup,
       action: create,
     },

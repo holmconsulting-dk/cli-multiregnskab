@@ -21,7 +21,7 @@ info:
     but can continue with token and refreshToken. This is what our iOS/Android do.
 
     On all requests, an optional value can be provided in a header 'X-MultiRegnskabTraceId' to facilitate tracing and troubleshooting.
-  version: "1.0.13"
+  version: "1.0.16"
   title: Multi-Regnskab Public Client API
   contact:
     email: info@multiregnskab.dk
@@ -571,6 +571,86 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SalesRequest'
+
+  /bankAccounts/{companyXid}:
+    get:
+      tags:
+        - bank
+      summary: Provides list of configured bank accounts in the specified company
+      description: |
+        Typical use is to get bankAccountXid's for bankAccounts with the purpose of subsequently 
+        calling bankPostings.
+      operationId: bankAccounts
+      security:
+        - UserToken: []
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of bank accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccounts'
+        '401':
+          description: Not authorized
+
+  /bankPostings/{companyXid}/{bankAccountXid}:
+    get:
+      tags:
+        - bank
+      summary: Fetch bank postings for a particular bank account
+      description: |
+        Gives you a list of bank postings that has been imported into Multi-Regnskab for bank reconciliation.
+        Note that this endpoint only returns what has already been imported. No call is made to made to actually
+        fetch recent postings via PSD2 integration or similar.
+      operationId: bankPostings
+      security:
+        - UserToken: []
+      parameters:
+        - name: companyXid
+          in: path
+          required: true
+          description: Identification of company
+          schema:
+            type: integer
+            format: int64
+        - name: bankAccountXid
+          in: path
+          required: true
+          description: Identification of bank account
+          schema:
+            type: integer
+            format: int64
+        - name: fromDateIncl
+          in: query
+          required: false
+          description: Only return postings from (and including) this date (ISO 8601 format). Defaults to 'one month ago'
+          schema:
+            type: string
+            format: date
+        - name: toDateIncl
+          in: query
+          required: false
+          description: Only return postings until (but including) this date (ISO 8601 format)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of bank postings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankPostings'
+        '401':
+          description: Not authorized
 
   /bankBalances/{companyXid}:
     get:
@@ -1228,7 +1308,7 @@ components:
       properties:
         date:
           type: string
-          description: The date associated with the file
+          description: The date associated with the file. ISO 8601
           example: 2021-12-31
         friendlyFilename:
           description: A 'user friendly' name for the file
@@ -1267,7 +1347,7 @@ components:
           maxLength: 250
         date:
           type: string
-          description: If no date is provided, the file will get 'todays date'.
+          description: If no date is provided, the file will get 'todays date'. Use ISO 8601
           example: 2021-12-31
         keepHiddenUntilRegistration:
           type: boolean
@@ -1339,6 +1419,8 @@ components:
         - zipCode
         - city
         - countryCode
+        - languageCode
+        - paymentTermsType
       properties:
         companyXid:
           type: integer
@@ -1733,6 +1815,89 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/PriceAndCurrency'
+
+    BankPostings:
+      type: object
+      description: A list of bank postings
+      required:
+        - bpList
+      properties:
+        bpList:
+          type: array
+          description: List of bank postings
+          items:
+            $ref: '#/components/schemas/BankPosting'
+
+    BankPosting:
+      type: object
+      required:
+        - xid
+        - bankDate
+        - bankText
+      properties:
+        xid:
+          type: integer
+          description: Id reference used by Multi-Regnskab
+          format: int64
+          example: 123456789
+        bankDate:
+          type: string
+          description: The date of the bank posting (ISO 8601)
+          example: 2024-12-31
+        bankText:
+          type: string
+          description: The bank text
+          example: Gebyr januar
+        bankAmount:
+          description: The amount
+          type: string
+          example: "197,00"
+        extraBankText:
+          type: string
+          description: Extra text supplied by the bank. Typically details about sender or recipient
+        userNote:
+          type: string
+          description: A note text manually entered by the user in Multi-Regnskab
+          example: Samme som altid
+        externalRef:
+          type: string
+          description: If available, this should be a unique identifier provided via a PSD2 integration or similar
+
+    BankAccounts:
+      type: object
+      properties:
+        accounts:
+          type: array
+          xml:
+            name: accounts
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/BankAccount'
+
+    BankAccount:
+      type: object
+      required:
+        - xid
+        - name
+        - currency
+      properties:
+        xid:
+          type: integer
+          description: Id reference used by Multi-Regnskab
+          format: int64
+          example: 123456789
+        name:
+          type: string
+          description: Name of the bank account and also the name of associated finance account
+          example: Driftskonto
+        currency:
+          type: string
+          description: Currency of funds in the account
+          example: DKK
+        banksIdentification:
+          type: string
+          description: User provided value intended to reflect how the bank identifies the bank account
+          example: 1234 0123456789
 
     PriceAndCurrency:
       type: object

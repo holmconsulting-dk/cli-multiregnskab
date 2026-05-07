@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
+import { apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
   setupCompanyOption(cmd)
@@ -15,11 +16,10 @@ export async function balances(options: { company?: string }, cmd: Command) {
   })
 
   if (error || !data) {
-    console.error('Failed to retrieve bank balances.')
-    process.exit(1)
+    apiError(cmd, 'Failed to retrieve bank balances.', error)
   }
 
-  const items = data.balances
+  const items = data.bbList
   if (items.length === 0) {
     console.log('No bank balances found.')
     return

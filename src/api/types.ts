@@ -331,6 +331,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bankAccounts/{companyXid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Provides list of configured bank accounts in the specified company
+         * @description Typical use is to get bankAccountXid's for bankAccounts with the purpose of subsequently
+         *     calling bankPostings.
+         */
+        get: operations["bankAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bankPostings/{companyXid}/{bankAccountXid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch bank postings for a particular bank account
+         * @description Gives you a list of bank postings that has been imported into Multi-Regnskab for bank reconciliation.
+         *     Note that this endpoint only returns what has already been imported. No call is made to made to actually
+         *     fetch recent postings via PSD2 integration or similar.
+         */
+        get: operations["bankPostings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bankBalances/{companyXid}": {
         parameters: {
             query?: never;
@@ -680,7 +723,7 @@ export interface components {
         };
         ArchiveFileUpdate: {
             /**
-             * @description The date associated with the file
+             * @description The date associated with the file. ISO 8601
              * @example 2021-12-31
              */
             date: string;
@@ -705,7 +748,7 @@ export interface components {
             /** @description A 'friendly' file name can be provided so while fileName could easily be something like IMG001234.PNG, friendlyFileName could be 'Bakery receipt' */
             friendlyFilename?: string;
             /**
-             * @description If no date is provided, the file will get 'todays date'.
+             * @description If no date is provided, the file will get 'todays date'. Use ISO 8601
              * @example 2021-12-31
              */
             date?: string;
@@ -791,8 +834,8 @@ export interface components {
              * @description LanguageCode that determines language on invoices and in e-mails
              * @example DA
              */
-            languageCode?: components["schemas"]["LanguageCode"];
-            paymentTermsType?: components["schemas"]["PaymentTermsType"];
+            languageCode: components["schemas"]["LanguageCode"];
+            paymentTermsType: components["schemas"]["PaymentTermsType"];
             /**
              * Format: int
              * @example 20
@@ -1058,6 +1101,69 @@ export interface components {
             unitOfMeasureCode: string;
             /** @description List of prices (different currencies). At present (2026-03), only the first entry is used */
             prices: components["schemas"]["PriceAndCurrency"][];
+        };
+        /** @description A list of bank postings */
+        BankPostings: {
+            /** @description List of bank postings */
+            bpList: components["schemas"]["BankPosting"][];
+        };
+        BankPosting: {
+            /**
+             * Format: int64
+             * @description Id reference used by Multi-Regnskab
+             * @example 123456789
+             */
+            xid: number;
+            /**
+             * @description The date of the bank posting (ISO 8601)
+             * @example 2024-12-31
+             */
+            bankDate: string;
+            /**
+             * @description The bank text
+             * @example Gebyr januar
+             */
+            bankText: string;
+            /**
+             * @description The amount
+             * @example 197,00
+             */
+            bankAmount?: string;
+            /** @description Extra text supplied by the bank. Typically details about sender or recipient */
+            extraBankText?: string;
+            /**
+             * @description A note text manually entered by the user in Multi-Regnskab
+             * @example Samme som altid
+             */
+            userNote?: string;
+            /** @description If available, this should be a unique identifier provided via a PSD2 integration or similar */
+            externalRef?: string;
+        };
+        BankAccounts: {
+            accounts?: components["schemas"]["BankAccount"][];
+        };
+        BankAccount: {
+            /**
+             * Format: int64
+             * @description Id reference used by Multi-Regnskab
+             * @example 123456789
+             */
+            xid: number;
+            /**
+             * @description Name of the bank account and also the name of associated finance account
+             * @example Driftskonto
+             */
+            name: string;
+            /**
+             * @description Currency of funds in the account
+             * @example DKK
+             */
+            currency: string;
+            /**
+             * @description User provided value intended to reflect how the bank identifies the bank account
+             * @example 1234 0123456789
+             */
+            banksIdentification?: string;
         };
         PriceAndCurrency: {
             /**
@@ -1672,6 +1778,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesResponse"];
+                };
+            };
+            /** @description Not authorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bankAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identification of company */
+                companyXid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of bank accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccounts"];
+                };
+            };
+            /** @description Not authorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bankPostings: {
+        parameters: {
+            query?: {
+                /** @description Only return postings from (and including) this date (ISO 8601 format). Defaults to 'one month ago' */
+                fromDateIncl?: string;
+                /** @description Only return postings until (but including) this date (ISO 8601 format) */
+                toDateIncl?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Identification of company */
+                companyXid: number;
+                /** @description Identification of bank account */
+                bankAccountXid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of bank postings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankPostings"];
                 };
             };
             /** @description Not authorized */

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { createClient } from '../../api/client.js'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
-import { fail } from '../../lib/error.js'
+import { fail, apiError } from '../../lib/error.js'
 
 const VALID_LANGUAGES = ['DA', 'EN'] as const
 const VALID_PAYMENT_TERMS = ['RUNNING_MONTH', 'NET', 'NET_CASH', 'ALREADY_PAID'] as const
@@ -57,8 +57,8 @@ export function setup(cmd: Command) {
     .option('--phone <phone>', 'phone number')
     .option('--att <name>', 'attention person for invoicing')
     .option('--email <email>', 'default invoice recipient email')
-    .option('--lang <code>', `language code for invoices (${VALID_LANGUAGES.join(' | ')})`)
-    .option('--payment-terms <type>', `payment terms type (${VALID_PAYMENT_TERMS.join(' | ')})`)
+    .option('--lang <code>', `language code for invoices (${VALID_LANGUAGES.join(' | ')}) (required)`)
+    .option('--payment-terms <type>', `payment terms type (${VALID_PAYMENT_TERMS.join(' | ')}) (required)`)
     .option('--payment-days <days>', 'payment terms days')
     .option('--einvoice', 'enable electronic invoicing')
     .option('--einvoice-type <type>', `electronic invoice destination type (${VALID_EINVOICE_TYPES.join(' | ')})`)
@@ -75,6 +75,8 @@ export async function create(options: CreateOptions, cmd: Command) {
     ['zip', '--zip'],
     ['city', '--city'],
     ['country', '--country'],
+    ['lang', '--lang'],
+    ['paymentTerms', '--payment-terms'],
   ]
   const missing = required.filter(([key]) => !options[key]).map(([, flag]) => flag)
   if (missing.length > 0) {
@@ -131,8 +133,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    console.error('Failed to create customer.')
-    process.exit(1)
+    apiError(cmd, 'Failed to create customer.', error)
   }
 
   console.log('Customer created successfully.')

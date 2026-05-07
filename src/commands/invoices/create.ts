@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { readFileSync, existsSync } from 'fs'
 import { createClient } from '../../api/client.js'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
-import { fail } from '../../lib/error.js'
+import { fail, apiError } from '../../lib/error.js'
 
 interface InvoiceLine {
   lineText: string
@@ -106,8 +106,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    console.error('Failed to create invoice.')
-    process.exit(1)
+    apiError(cmd, 'Failed to create invoice.', error)
   }
 
   console.log('Invoice created successfully.')
