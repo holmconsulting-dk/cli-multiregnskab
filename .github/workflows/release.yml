@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build binaries
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-darwin-arm64  src/index.ts --outfile dist/mr-macos-arm64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-darwin-x64    src/index.ts --outfile dist/mr-macos-x64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-linux-x64     src/index.ts --outfile dist/mr-linux-x64
+          bun build --compile --minify --define "__VERSION__=\"$VERSION\"" --target=bun-windows-x64   src/index.ts --outfile dist/mr-windows-x64.exe
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/mr-macos-arm64
+            dist/mr-macos-x64
+            dist/mr-linux-x64
+            dist/mr-windows-x64.exe
+          generate_release_notes: true
