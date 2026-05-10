@@ -812,7 +812,7 @@ export interface components {
             entityVersion: number;
             customerName: string;
             customerNumber?: string;
-            /** @description true for private customer - false for business customers */
+            /** @description true for private customer - false for business customers. Defaults to business customer (false) */
             privatePerson?: boolean;
             /** @description E.g. CVR number for Danish business customers */
             companyIdentifier?: string;
@@ -828,16 +828,20 @@ export interface components {
             invoiceAtt?: string;
             /** @description Default e-mail recipient for invoices */
             invoiceEmail?: string;
-            /** @example DKK */
+            /**
+             * @description The currency code (ISO 4217) to be used when creating invoices to this customer
+             * @example DKK
+             */
             currencyCode: string;
             /**
              * @description LanguageCode that determines language on invoices and in e-mails
              * @example DA
              */
             languageCode: components["schemas"]["LanguageCode"];
-            paymentTermsType: components["schemas"]["PaymentTermsType"];
+            paymentTermsType?: components["schemas"]["PaymentTermsType"];
             /**
              * Format: int
+             * @description Required if electronicInvoice is true
              * @example 20
              */
             paymentTermsDays?: number;
