@@ -21,7 +21,7 @@ info:
     but can continue with token and refreshToken. This is what our iOS/Android do.
 
     On all requests, an optional value can be provided in a header 'X-MultiRegnskabTraceId' to facilitate tracing and troubleshooting.
-  version: "1.0.16"
+  version: "1.0.17"
   title: Multi-Regnskab Public Client API
   contact:
     email: info@multiregnskab.dk
@@ -1420,7 +1420,6 @@ components:
         - city
         - countryCode
         - languageCode
-        - paymentTermsType
       properties:
         companyXid:
           type: integer
@@ -1441,7 +1440,7 @@ components:
           type: string
           maxLength: 20
         privatePerson:
-          description: true for private customer - false for business customers
+          description: true for private customer - false for business customers. Defaults to business customer (false)
           type: boolean
         companyIdentifier:
           description: E.g. CVR number for Danish business customers
@@ -1478,6 +1477,7 @@ components:
           type: string
           maxLength: 60
         currencyCode:
+          description: The currency code (ISO 4217) to be used when creating invoices to this customer
           type: string
           maxLength: 3
           example: DKK
@@ -1488,6 +1488,7 @@ components:
         paymentTermsType:
           $ref: '#/components/schemas/PaymentTermsType'
         paymentTermsDays:
+          description: Required if electronicInvoice is true
           type: integer
           format: int
           example: 20

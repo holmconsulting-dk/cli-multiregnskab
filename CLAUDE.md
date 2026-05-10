@@ -31,6 +31,5 @@ Tag on main triggers the GitHub Actions release workflow. Binaries embed the tag
 
 ## Known API quirks
 
-- `Customer`: `languageCode` and `paymentTermsType` are required despite the spec not marking them as such
 - `InvoiceLine`: `amount` is always required, even when `priceEach` × `numberOfUnits` covers it
 - `productTypeXid` is always required on invoice lines — `productXid` does not replace it
