@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '../../api/client.js'
+import { createClient } from '@holmconsulting/multiregnskab-api'
 import { apiError } from '../../lib/error.js'
 
 export async function list(_options: unknown, cmd: Command) {

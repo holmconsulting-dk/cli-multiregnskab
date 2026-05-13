@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { readFileSync, existsSync } from 'fs'
-import { createClient } from '../../api/client.js'
+import { createClient } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
 

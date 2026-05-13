@@ -4,8 +4,11 @@
   "workspaces": {
     "": {
       "name": "@holmconsulting/cli-multiregnskab",
+    },
+    "packages/api": {
+      "name": "@holmconsulting/multiregnskab-api",
+      "version": "0.1.0",
       "dependencies": {
-        "commander": "^12.0.0",
         "openapi-fetch": "^0.13.5",
       },
       "devDependencies": {
@@ -14,11 +17,30 @@
         "typescript": "^5.0.0",
       },
     },
+    "packages/cli": {
+      "name": "@holmconsulting/cli-multiregnskab",
+      "version": "0.1.0",
+      "bin": {
+        "mr": "./dist/index.js",
+      },
+      "dependencies": {
+        "@holmconsulting/multiregnskab-api": "workspace:*",
+        "commander": "^12.0.0",
+      },
+      "devDependencies": {
+        "@types/node": "^25.3.5",
+        "typescript": "^5.0.0",
+      },
+    },
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.28.5", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw=="],
 
     "@babel/helper-validator-identifier": ["@babel/helper-validator-identifier@7.28.5", "", {}, "sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q=="],
+
+    "@holmconsulting/cli-multiregnskab": ["@holmconsulting/cli-multiregnskab@workspace:packages/cli"],
+
+    "@holmconsulting/multiregnskab-api": ["@holmconsulting/multiregnskab-api@workspace:packages/api"],
 
     "@redocly/ajv": ["@redocly/ajv@8.11.2", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2", "uri-js-replace": "^1.0.1" } }, "sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg=="],
 

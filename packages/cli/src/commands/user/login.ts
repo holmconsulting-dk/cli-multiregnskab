@@ -1,4 +1,4 @@
-import { createUnauthenticatedClient, writeAuth } from '../../api/client.js'
+import { createUnauthenticatedClient, writeAuth } from '@holmconsulting/multiregnskab-api'
 import { prompt, promptPassword } from '../../lib/prompt.js'
 
 export async function login() {

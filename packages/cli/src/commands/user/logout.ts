@@ -1,4 +1,4 @@
-import { createClient, clearAuth } from '../../api/client.js'
+import { createClient, clearAuth } from '@holmconsulting/multiregnskab-api'
 
 export async function logout() {
   const client = createClient()

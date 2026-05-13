@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '../../api/client.js'
+import { createClient } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 
 export function setup(cmd: Command) {
