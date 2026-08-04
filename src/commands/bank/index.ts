@@ -25,7 +25,12 @@ export const bankArea = createArea({
     {
       name: 'postings',
       description: 'List bank postings for an account',
-      info: 'Lists bank postings for the given bank account. Defaults to the last month. Use --from and --to to filter by date range (ISO 8601, e.g. 2026-01-01). Run mr bank accounts to find account IDs.',
+      info: `Lists bank postings for the given bank account. Defaults to the last month.
+Use --from and --to to filter by date range (ISO 8601, e.g. 2026-01-01).
+Run mr bank accounts to find account IDs.
+
+Use --verbose to include the posting ID column. Posting IDs are needed for
+mr registrations create --from-bank-posting <xid>.`,
       setup: postingsSetup,
       action: postings,
     },

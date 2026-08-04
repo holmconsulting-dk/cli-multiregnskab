@@ -154,3 +154,117 @@ test('customers create: invalid --payment-terms value', () => {
   expect(exitCode).toBe(1)
   expect(stderr).toContain('--payment-terms')
 })
+
+// ---------------------------------------------------------------------------
+// registrations upload-file — required options
+// ---------------------------------------------------------------------------
+
+test('registrations upload-file: missing --company', () => {
+  const { exitCode, stderr } = mr('registrations', 'upload-file', '--file', '/tmp/anything.pdf')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--company')
+})
+
+test('registrations upload-file: missing --file', () => {
+  const { exitCode, stderr } = mr('registrations', 'upload-file', '--company', '123')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--file')
+})
+
+test('registrations upload-file: file not found', () => {
+  const { exitCode, stderr } = mr('registrations', 'upload-file', '--company', '123', '--file', '/tmp/mr-test/does-not-exist.pdf')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('not found')
+})
+
+test('registrations upload-file: invalid date format', async () => {
+  await write('/tmp/mr-test/dummy.pdf', 'not a real pdf')
+  const { exitCode, stderr } = mr('registrations', 'upload-file', '--company', '123', '--file', '/tmp/mr-test/dummy.pdf', '--date', '07-05-2026')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('YYYY-MM-DD')
+})
+
+// ---------------------------------------------------------------------------
+// registrations create — required options and lines validation
+// ---------------------------------------------------------------------------
+
+const validLines = [{ accountNumber: '3020', amount: '100,00' }]
+
+test('registrations create: missing --lines', () => {
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--lines')
+})
+
+test('registrations create: lines file not found', () => {
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', '/tmp/mr-test/does-not-exist.json')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('not found')
+})
+
+test('registrations create: empty lines array', async () => {
+  const lines = await writeTmp('reg-empty.json', [])
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('non-empty')
+})
+
+test('registrations create: line missing accountNumber', async () => {
+  const lines = await writeTmp('reg-missing-account.json', [{ amount: '100,00' }])
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('accountNumber')
+})
+
+test('registrations create: line missing amount', async () => {
+  const lines = await writeTmp('reg-missing-amount.json', [{ accountNumber: '3020' }])
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('amount')
+})
+
+test('registrations create: line has invalid amount', async () => {
+  const lines = await writeTmp('reg-bad-amount.json', [{ accountNumber: '3020', amount: 'abc' }])
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('not a valid number')
+})
+
+test('registrations create: missing --date without --from-bank-posting', async () => {
+  const lines = await writeTmp('reg-valid.json', validLines)
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--date')
+})
+
+test('registrations create: missing --description without --from-bank-posting', async () => {
+  const lines = await writeTmp('reg-valid2.json', validLines)
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '2026-01-01', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--description')
+})
+
+test('registrations create: invalid --date format', async () => {
+  const lines = await writeTmp('reg-valid3.json', validLines)
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--date', '07-05-2026', '--description', 'x', '--lines', lines)
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('YYYY-MM-DD')
+})
+
+test('registrations create: --from-bank-posting without --bank-account', async () => {
+  const lines = await writeTmp('reg-valid4.json', validLines)
+  const { exitCode, stderr } = mr('registrations', 'create', '--company', '123', '--description', 'x', '--lines', lines, '--from-bank-posting', '999')
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('--bank-account')
+})
+
+test('registrations create: too many files attached', async () => {
+  const lines = await writeTmp('reg-valid5.json', validLines)
+  const { exitCode, stderr } = mr(
+    'registrations', 'create',
+    '--company', '123', '--date', '2026-01-01', '--description', 'x', '--lines', lines,
+    '--file', '1', '--file', '2', '--file', '3', '--file', '4',
+  )
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('at most 3')
+})

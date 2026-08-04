@@ -33,3 +33,5 @@ Tag on main triggers the GitHub Actions release workflow. Binaries embed the tag
 
 - `InvoiceLine`: `amount` is always required, even when `priceEach` × `numberOfUnits` covers it
 - `productTypeXid` is always required on invoice lines — `productXid` does not replace it
+- No endpoint exists for listing the chart of accounts (finance accounts / kontoplan) or VAT codes. Users must look these up in the Multi-Regnskab web UI. Only `bankAccounts` (a subset) is listable.
+- `Registration` has no `bankPostingXid` field — a suggested registration is not formally linked to a bank posting server-side. The `--from-bank-posting` flag in `mr registrations create` is a client-side convenience: it pre-fills `date`/`description` from the posting and validates that one line's amount matches, but nothing about the posting is sent to the API. Reconciliation happens when a user accepts the registration in Multi-Regnskab.
