@@ -1,19 +1,9 @@
 import { Command } from 'commander'
 import { readFileSync, existsSync } from 'fs'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, createInvoiceOp } from '@holmconsulting/multiregnskab-api'
+import type { InvoiceLine } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
-
-interface InvoiceLine {
-  lineText: string
-  amount: string
-  productTypeXid: number
-  lineNote?: string
-  numberOfUnits?: string
-  unitOfMeasureCode?: string
-  priceEach?: string
-  productXid?: number
-}
 
 interface CreateOptions {
   company?: string
@@ -67,48 +57,25 @@ export async function create(options: CreateOptions, cmd: Command) {
     fail(cmd, `Failed to parse lines file: ${options.lines}. Ensure it is valid JSON.`)
   }
 
-  if (!Array.isArray(lines!) || lines.length === 0) {
-    fail(cmd, 'Lines file must contain a non-empty JSON array.')
-  }
-
-  for (let i = 0; i < lines!.length; i++) {
-    const line = lines![i]
-    if (!line.lineText) fail(cmd, `Line ${i}: missing required field "lineText"`)
-    if (!line.amount) fail(cmd, `Line ${i}: missing required field "amount"`)
-    if (!line.productTypeXid) fail(cmd, `Line ${i}: missing required field "productTypeXid". Run mr products product-types --company <xid> to find valid IDs. Note: productXid does not replace productTypeXid.`)
-  }
-
   const client = createClient()
-  const { data, error } = await client.POST('/invoices', {
-    body: {
-      companyXid,
-      invoiceXid: 0,
-      customerXid,
-      date: options.date!,
-      creditNote: options.creditNote ?? false,
-      offer: options.offer ?? false,
-      reverseCharge: options.reverseCharge ?? false,
-      linesHaveProductId: options.linesHaveProductId ?? false,
-      linesHaveNumberAndPriceEach: options.linesHaveNumberAndPrice ?? false,
-      lines: lines!.map((line, index) => ({
-        lineNo: index,
-        lineText: line.lineText,
-        amount: line.amount,
-        productTypeXid: line.productTypeXid,
-        ...(line.lineNote && { lineNote: line.lineNote }),
-        ...(line.numberOfUnits && { numberOfUnits: line.numberOfUnits }),
-        ...(line.unitOfMeasureCode && { unitOfMeasureCode: line.unitOfMeasureCode }),
-        ...(line.priceEach && { priceEach: line.priceEach }),
-        ...(line.productXid && { productXid: line.productXid }),
-      })),
-      ...(options.title && { title: options.title }),
-    },
-  })
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to create invoice.', error)
-  }
+  const result = await createInvoiceOp
+    .execute(
+      {
+        companyXid,
+        customerXid,
+        date: options.date!,
+        lines: lines!,
+        ...(options.title && { title: options.title }),
+        creditNote: options.creditNote ?? false,
+        offer: options.offer ?? false,
+        reverseCharge: options.reverseCharge ?? false,
+        linesHaveProductId: options.linesHaveProductId ?? false,
+        linesHaveNumberAndPriceEach: options.linesHaveNumberAndPrice ?? false,
+      },
+      client
+    )
+    .catch((e) => apiError(cmd, String(e instanceof Error ? e.message : 'Failed to create invoice.'), e))
 
   console.log('Invoice created successfully.')
-  console.log(`ID: ${data.xid}`)
+  console.log(`ID: ${result.xid}`)
 }

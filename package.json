@@ -4,6 +4,6 @@
     "generate-api": "bun run --cwd packages/api generate-api",
     "build": "bun run --cwd packages/api build && bun run --cwd packages/cli build",
     "dev": "bun run --cwd packages/cli dev",
-    "test": "bun run --cwd packages/cli test"
+    "test": "bun run --cwd packages/api test && bun run --cwd packages/cli test"
   }
 }

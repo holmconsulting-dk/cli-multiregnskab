@@ -1,5 +1,6 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, createCustomerOp } from '@holmconsulting/multiregnskab-api'
+import type { CreateCustomerInput } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
 
@@ -38,7 +39,6 @@ interface CreateOptions {
 export function setup(cmd: Command) {
   setupCompanyOption(cmd)
 
-  // Required fields
   cmd
     .option('--name <name>', 'customer name (required)')
     .option('--currency <code>', 'currency code, e.g. DKK (required)')
@@ -47,7 +47,6 @@ export function setup(cmd: Command) {
     .option('--city <city>', 'city (required)')
     .option('--country <code>', 'country code, e.g. DK (required)')
 
-  // Optional fields
   cmd
     .option('--number <number>', 'customer number')
     .option('--private', 'mark as private person (default: business customer)')
@@ -91,50 +90,40 @@ export async function create(options: CreateOptions, cmd: Command) {
   }
 
   if (options.einvoice) {
-    if (!options.einvoiceType) {
-      fail(cmd, '--einvoice-type is required when --einvoice is set')
-    }
+    if (!options.einvoiceType) fail(cmd, '--einvoice-type is required when --einvoice is set')
     if (!VALID_EINVOICE_TYPES.includes(options.einvoiceType as EinvoiceDestinationType)) {
       fail(cmd, `Invalid --einvoice-type value: ${options.einvoiceType}. Must be one of: ${VALID_EINVOICE_TYPES.join(', ')}`)
     }
-    if (!options.einvoiceAddress) {
-      fail(cmd, '--einvoice-address is required when --einvoice is set')
-    }
+    if (!options.einvoiceAddress) fail(cmd, '--einvoice-address is required when --einvoice is set')
+  }
+
+  const input: CreateCustomerInput = {
+    companyXid,
+    customerName: options.name!,
+    currencyCode: options.currency!,
+    address1: options.address1!,
+    zipCode: options.zip!,
+    city: options.city!,
+    countryCode: options.country!,
+    languageCode: options.lang! as Language,
+    ...(options.number && { customerNumber: options.number }),
+    ...(options.private !== undefined && { privatePerson: options.private }),
+    ...(options.cvr && { companyIdentifier: options.cvr }),
+    ...(options.address2 && { address2: options.address2 }),
+    ...(options.address3 && { address3: options.address3 }),
+    ...(options.phone && { phone: options.phone }),
+    ...(options.att && { invoiceAtt: options.att }),
+    ...(options.email && { invoiceEmail: options.email }),
+    ...(options.paymentTerms && { paymentTermsType: options.paymentTerms as PaymentTermsType }),
+    ...(options.paymentDays && { paymentTermsDays: parseInt(options.paymentDays, 10) }),
+    ...(options.einvoice !== undefined && { electronicInvoice: options.einvoice }),
+    ...(options.einvoiceType && { electronicInvoiceDestinationType: options.einvoiceType as EinvoiceDestinationType }),
+    ...(options.einvoiceAddress && { electronicInvoiceAddress: options.einvoiceAddress }),
   }
 
   const client = createClient()
-  const { data, error } = await client.POST('/customers', {
-    body: {
-      companyXid,
-      xid: 0,
-      entityVersion: 0,
-      customerName: options.name!,
-      currencyCode: options.currency!,
-      address1: options.address1!,
-      zipCode: options.zip!,
-      city: options.city!,
-      countryCode: options.country!,
-      ...(options.number && { customerNumber: options.number }),
-      ...(options.private !== undefined && { privatePerson: options.private }),
-      ...(options.cvr && { companyIdentifier: options.cvr }),
-      ...(options.address2 && { address2: options.address2 }),
-      ...(options.address3 && { address3: options.address3 }),
-      ...(options.phone && { phone: options.phone }),
-      ...(options.att && { invoiceAtt: options.att }),
-      ...(options.email && { invoiceEmail: options.email }),
-      ...(options.lang && { languageCode: options.lang as Language }),
-      ...(options.paymentTerms && { paymentTermsType: options.paymentTerms as PaymentTermsType }),
-      ...(options.paymentDays && { paymentTermsDays: parseInt(options.paymentDays, 10) }),
-      ...(options.einvoice !== undefined && { electronicInvoice: options.einvoice }),
-      ...(options.einvoiceType && { electronicInvoiceDestinationType: options.einvoiceType as EinvoiceDestinationType }),
-      ...(options.einvoiceAddress && { electronicInvoiceAddress: options.einvoiceAddress }),
-    },
-  })
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to create customer.', error)
-  }
+  const result = await createCustomerOp.execute(input, client).catch((e) => apiError(cmd, 'Failed to create customer.', e))
 
   console.log('Customer created successfully.')
-  console.log(`ID: ${data.xid}`)
+  console.log(`ID: ${result.xid}`)
 }

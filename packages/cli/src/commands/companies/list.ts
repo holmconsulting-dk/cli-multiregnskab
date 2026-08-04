@@ -1,14 +1,10 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, listCompaniesOp } from '@holmconsulting/multiregnskab-api'
 import { apiError } from '../../lib/error.js'
 
 export async function list(_options: unknown, cmd: Command) {
   const client = createClient()
-  const { data, error } = await client.GET('/companies')
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to retrieve companies.', error)
-  }
+  const data = await listCompaniesOp.execute({}, client).catch((e) => apiError(cmd, 'Failed to retrieve companies.', e))
 
   const companies = data.companiesAndAccessList
   if (companies.length === 0) {

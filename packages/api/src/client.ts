@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import createFetchClient, { type Middleware } from 'openapi-fetch'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { homedir } from 'os'

@@ -1,6 +1,7 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, listProductTypesOp } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
+import { apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
   setupCompanyOption(cmd)
@@ -10,14 +11,7 @@ export async function productTypes(options: { company?: string }, cmd: Command) 
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/productTypes/{companyXid}', {
-    params: { path: { companyXid } },
-  })
-
-  if (error || !data) {
-    console.error('Failed to retrieve product types.')
-    process.exit(1)
-  }
+  const data = await listProductTypesOp.execute({ companyXid }, client).catch((e) => apiError(cmd, 'Failed to retrieve product types.', e))
 
   const types = data.ptList
   if (types.length === 0) {

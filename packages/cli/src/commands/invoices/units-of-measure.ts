@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, listUnitsOfMeasureOp } from '@holmconsulting/multiregnskab-api'
 import { fail, apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
@@ -13,13 +13,9 @@ export async function unitsOfMeasure(options: { lang: string }, cmd: Command) {
   }
 
   const client = createClient()
-  const { data, error } = await client.GET('/unitsOfMeasure/{language}', {
-    params: { path: { language: lang } },
-  })
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to retrieve units of measure.', error)
-  }
+  const data = await listUnitsOfMeasureOp
+    .execute({ language: lang as 'DA' | 'EN' }, client)
+    .catch((e) => apiError(cmd, 'Failed to retrieve units of measure.', e))
 
   const units = data.uomList
   if (units.length === 0) {

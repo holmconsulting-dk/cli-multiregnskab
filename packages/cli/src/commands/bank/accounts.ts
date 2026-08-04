@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, listBankAccountsOp } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { apiError } from '../../lib/error.js'
 
@@ -11,13 +11,7 @@ export async function accounts(options: { company?: string }, cmd: Command) {
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/bankAccounts/{companyXid}', {
-    params: { path: { companyXid } },
-  })
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to retrieve bank accounts.', error)
-  }
+  const data = await listBankAccountsOp.execute({ companyXid }, client).catch((e) => apiError(cmd, 'Failed to retrieve bank accounts.', e))
 
   const items = data.accounts ?? []
   if (items.length === 0) {

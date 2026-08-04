@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, getBankPostingsOp } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
 
@@ -26,20 +26,9 @@ export async function postings(options: PostingsOptions, cmd: Command) {
   if (isNaN(bankAccountXid)) fail(cmd, `Invalid account ID: ${options.account}`)
 
   const client = createClient()
-
-  const { data, error } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
-    params: {
-      path: { companyXid, bankAccountXid },
-      query: {
-        ...(options.from && { fromDateIncl: options.from }),
-        ...(options.to && { toDateIncl: options.to }),
-      },
-    },
-  })
-
-  if (error || !data) {
-    apiError(cmd, 'Failed to retrieve bank postings.', error)
-  }
+  const data = await getBankPostingsOp
+    .execute({ companyXid, bankAccountXid, fromDate: options.from, toDate: options.to }, client)
+    .catch((e) => apiError(cmd, 'Failed to retrieve bank postings.', e))
 
   const items = data.bpList
   if (items.length === 0) {

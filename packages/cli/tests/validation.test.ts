@@ -120,13 +120,6 @@ test('customers create: missing --lang', () => {
   expect(stderr).toContain('--lang')
 })
 
-test('customers create: missing --payment-terms', () => {
-  const args = baseCustomer.filter((v, i) => v !== '--payment-terms' && baseCustomer[i - 1] !== '--payment-terms')
-  const { exitCode, stderr } = mr('customers', 'create', ...args)
-  expect(exitCode).toBe(1)
-  expect(stderr).toContain('--payment-terms')
-})
-
 test('customers create: --einvoice without --einvoice-type', () => {
   const { exitCode, stderr } = mr('customers', 'create', ...baseCustomer, '--einvoice', '--einvoice-address', '12345678')
   expect(exitCode).toBe(1)

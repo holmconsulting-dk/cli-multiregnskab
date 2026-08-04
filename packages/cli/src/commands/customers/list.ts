@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient, listCustomersOp } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { apiError } from '../../lib/error.js'
 
@@ -12,25 +12,9 @@ export async function list(search: string | undefined, options: { company?: stri
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/customers/{companyXid}', {
-    params: { path: { companyXid } },
-  })
+  const data = await listCustomersOp.execute({ companyXid, search }, client).catch((e) => apiError(cmd, 'Failed to retrieve customers.', e))
 
-  if (error || !data) {
-    apiError(cmd, 'Failed to retrieve customers.', error)
-  }
-
-  let customers = data.customers ?? []
-
-  if (search) {
-    const term = search.toLowerCase()
-    customers = customers.filter(
-      (c) =>
-        c.customerName.toLowerCase().includes(term) ||
-        (c.customerNumber ?? '').toLowerCase().includes(term)
-    )
-  }
-
+  const { customers } = data
   if (customers.length === 0) {
     console.log('No customers found.')
     return
