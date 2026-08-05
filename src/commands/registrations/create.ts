@@ -22,6 +22,18 @@ interface CreateOptions {
   attachFile?: string[]
   fromBankPosting?: string
   bankAccount?: string
+  postingFrom?: string
+  postingTo?: string
+}
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function oneYearAgoIso(): string {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 1)
+  return isoDate(d)
 }
 
 const MAX_ATTACHED_FILES = 3
@@ -66,6 +78,8 @@ export function setup(cmd: Command) {
     .option('--attach-file <path>', 'upload a local file and attach it in one go (repeatable, max 3 total)', collect, [] as string[])
     .option('--from-bank-posting <xid>', 'pre-fill date/description from a bank posting (requires --bank-account)')
     .option('--bank-account <xid>', 'bank account ID used with --from-bank-posting (run mr bank accounts to find)')
+    .option('--posting-from <date>', 'earliest bank-posting date to search when looking up --from-bank-posting, e.g. 2025-01-01 (default: one year ago)')
+    .option('--posting-to <date>', 'latest bank-posting date to search when looking up --from-bank-posting, e.g. 2026-08-05 (default: today)')
 }
 
 export async function create(options: CreateOptions, cmd: Command) {
@@ -107,9 +121,22 @@ export async function create(options: CreateOptions, cmd: Command) {
     if (isNaN(bankPostingXid)) fail(cmd, `Invalid bank posting ID: ${options.fromBankPosting}`)
     if (isNaN(bankAccountXid)) fail(cmd, `Invalid bank account ID: ${options.bankAccount}`)
 
+    if (options.postingFrom && !/^\d{4}-\d{2}-\d{2}$/.test(options.postingFrom)) {
+      fail(cmd, `Invalid --posting-from date format: ${options.postingFrom}. Expected YYYY-MM-DD.`)
+    }
+    if (options.postingTo && !/^\d{4}-\d{2}-\d{2}$/.test(options.postingTo)) {
+      fail(cmd, `Invalid --posting-to date format: ${options.postingTo}. Expected YYYY-MM-DD.`)
+    }
+
+    const fromDateIncl = options.postingFrom ?? oneYearAgoIso()
+    const toDateIncl = options.postingTo ?? isoDate(new Date())
+
     const client = createClient()
     const { data, error } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
-      params: { path: { companyXid, bankAccountXid } },
+      params: {
+        path: { companyXid, bankAccountXid },
+        query: { fromDateIncl, toDateIncl },
+      },
     })
     if (error || !data) apiError(cmd, 'Failed to fetch bank postings.', error)
 
@@ -117,8 +144,9 @@ export async function create(options: CreateOptions, cmd: Command) {
     if (!posting) {
       fail(
         cmd,
-        `Bank posting ${bankPostingXid} not found in account ${bankAccountXid} within the default date range. ` +
-          `Widen the range with mr bank postings --from <date> --to <date> to confirm it exists.`
+        `Bank posting ${bankPostingXid} not found in account ${bankAccountXid} within ${fromDateIncl}..${toDateIncl}. ` +
+          `Widen the search with --posting-from <date> --posting-to <date>, or confirm the posting exists with ` +
+          `mr bank postings --company ${companyXid} --account ${bankAccountXid} --from <date> --to <date> --verbose.`
       )
     }
 

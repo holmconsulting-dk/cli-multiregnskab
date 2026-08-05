@@ -77,6 +77,10 @@ Optional:
                                 line's amount matches the bank posting amount and rejects
                                 otherwise. No bankPostingXid is sent to the API.
   --bank-account <xid>          Bank account containing the posting referenced above.
+  --posting-from <date>         Earliest bank-posting date to search when looking up
+                                --from-bank-posting (default: one year ago).
+  --posting-to <date>           Latest bank-posting date to search when looking up
+                                --from-bank-posting (default: today).
 
 Example lines.json for "-100 drawn from bank, split into 45 travel + 55 taxi":
 [
