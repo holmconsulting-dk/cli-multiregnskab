@@ -6,6 +6,7 @@ import { invoicesArea } from './commands/invoices/index.js'
 import { customersArea } from './commands/customers/index.js'
 import { bankArea } from './commands/bank/index.js'
 import { productsArea } from './commands/products/index.js'
+import { registrationsArea } from './commands/registrations/index.js'
 
 declare const __VERSION__: string
 const version = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev'
@@ -24,5 +25,6 @@ program.addCommand(invoicesArea)
 program.addCommand(customersArea)
 program.addCommand(bankArea)
 program.addCommand(productsArea)
+program.addCommand(registrationsArea)
 
 program.parse()
