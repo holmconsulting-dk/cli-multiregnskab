@@ -37,22 +37,29 @@ export async function postings(options: PostingsOptions, cmd: Command) {
     return
   }
 
+  const verbose = (cmd.optsWithGlobals() as { verbose?: boolean }).verbose === true
+
   const col = (label: string, values: (string | null | undefined)[]) =>
     Math.max(label.length, ...values.map((v) => (v ?? '').length))
 
+  const colId = Math.max('ID'.length, ...items.map((p) => String(p.xid).length))
   const colDate = col('Date', items.map((p) => p.bankDate))
   const colText = col('Text', items.map((p) => p.bankText))
   const colAmount = col('Amount', items.map((p) => p.bankAmount))
   const colExtra = col('ExtraText', items.map((p) => p.extraBankText))
 
-  const header = `${'Date'.padEnd(colDate)}  ${'Text'.padEnd(colText)}  ${'Amount'.padEnd(colAmount)}  ExtraText`
-  const divider = `${'-'.repeat(colDate)}  ${'-'.repeat(colText)}  ${'-'.repeat(colAmount)}  ${'-'.repeat(colExtra)}`
+  const idHeader = verbose ? `${'ID'.padEnd(colId)}  ` : ''
+  const idDivider = verbose ? `${'-'.repeat(colId)}  ` : ''
+
+  const header = `${idHeader}${'Date'.padEnd(colDate)}  ${'Text'.padEnd(colText)}  ${'Amount'.padEnd(colAmount)}  ExtraText`
+  const divider = `${idDivider}${'-'.repeat(colDate)}  ${'-'.repeat(colText)}  ${'-'.repeat(colAmount)}  ${'-'.repeat(colExtra)}`
 
   console.log(header)
   console.log(divider)
   for (const p of items) {
+    const idCell = verbose ? `${String(p.xid).padEnd(colId)}  ` : ''
     console.log(
-      `${p.bankDate.padEnd(colDate)}  ${p.bankText.padEnd(colText)}  ${(p.bankAmount ?? '').padEnd(colAmount)}  ${p.extraBankText ?? ''}`
+      `${idCell}${p.bankDate.padEnd(colDate)}  ${p.bankText.padEnd(colText)}  ${(p.bankAmount ?? '').padEnd(colAmount)}  ${p.extraBankText ?? ''}`
     )
   }
 }
