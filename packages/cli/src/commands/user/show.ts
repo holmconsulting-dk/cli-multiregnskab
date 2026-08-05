@@ -1,16 +1,10 @@
 import { Command } from 'commander'
-import { createClient, readAuth } from '@holmconsulting/multiregnskab-api'
+import { getClient } from '../../lib/client.js'
 import { apiError } from '../../lib/error.js'
 
 export async function show(_options: unknown, cmd: Command) {
-  const auth = readAuth()
-  if (!auth?.token) {
-    console.error('Not logged in. Run: mr user login')
-    process.exit(1)
-  }
-
-  const client = createClient()
-  const { data, error } = await client.GET('/user')
+  const client = getClient()
+  const { data, error } = await client.GET('/user').catch((e) => apiError(cmd, 'Failed to retrieve user information.', e))
 
   if (error || !data) {
     apiError(cmd, 'Failed to retrieve user information.', error)

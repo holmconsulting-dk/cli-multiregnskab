@@ -1,5 +1,6 @@
+import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { createClient, listProductsOp } from '@holmconsulting/multiregnskab-api'
+import { listProductsOp } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { apiError } from '../../lib/error.js'
 
@@ -9,7 +10,7 @@ export function setup(cmd: Command) {
 
 export async function list(options: { company?: string }, cmd: Command) {
   const companyXid = parseCompanyXid(options, cmd)
-  const client = createClient()
+  const client = getClient()
 
   const data = await listProductsOp.execute({ companyXid }, client).catch((e) => apiError(cmd, 'Failed to retrieve products.', e))
 

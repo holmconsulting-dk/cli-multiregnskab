@@ -1,5 +1,6 @@
+import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { createClient, createCustomerOp } from '@holmconsulting/multiregnskab-api'
+import { createCustomerOp } from '@holmconsulting/multiregnskab-api'
 import type { CreateCustomerInput } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
@@ -121,7 +122,7 @@ export async function create(options: CreateOptions, cmd: Command) {
     ...(options.einvoiceAddress && { electronicInvoiceAddress: options.einvoiceAddress }),
   }
 
-  const client = createClient()
+  const client = getClient()
   const result = await createCustomerOp.execute(input, client).catch((e) => apiError(cmd, 'Failed to create customer.', e))
 
   console.log('Customer created successfully.')

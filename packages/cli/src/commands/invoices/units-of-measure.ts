@@ -1,5 +1,6 @@
+import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { createClient, listUnitsOfMeasureOp } from '@holmconsulting/multiregnskab-api'
+import { listUnitsOfMeasureOp } from '@holmconsulting/multiregnskab-api'
 import { fail, apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {
@@ -12,7 +13,7 @@ export async function unitsOfMeasure(options: { lang: string }, cmd: Command) {
     fail(cmd, `Invalid --lang value: ${options.lang}. Must be DA or EN.`)
   }
 
-  const client = createClient()
+  const client = getClient()
   const data = await listUnitsOfMeasureOp
     .execute({ language: lang as 'DA' | 'EN' }, client)
     .catch((e) => apiError(cmd, 'Failed to retrieve units of measure.', e))

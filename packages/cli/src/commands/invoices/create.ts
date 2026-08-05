@@ -1,6 +1,7 @@
+import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
 import { readFileSync, existsSync } from 'fs'
-import { createClient, createInvoiceOp } from '@holmconsulting/multiregnskab-api'
+import { createInvoiceOp } from '@holmconsulting/multiregnskab-api'
 import type { InvoiceLine } from '@holmconsulting/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
@@ -57,7 +58,7 @@ export async function create(options: CreateOptions, cmd: Command) {
     fail(cmd, `Failed to parse lines file: ${options.lines}. Ensure it is valid JSON.`)
   }
 
-  const client = createClient()
+  const client = getClient()
   const result = await createInvoiceOp
     .execute(
       {

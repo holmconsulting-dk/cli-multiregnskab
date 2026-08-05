@@ -1,5 +1,5 @@
-export { createClient, createUnauthenticatedClient, readAuth, writeAuth, clearAuth } from './client.js'
-export type { StoredAuth } from './client.js'
+export { createClient, createUnauthenticatedClient, loginWithPassword, readAuth, writeAuth, clearAuth, AuthenticationError } from './client.js'
+export type { StoredAuth, AuthConfig } from './client.js'
 export type { paths, components } from './types.js'
 export { createOperations } from './operations/index.js'
 export { listCompaniesOp } from './operations/index.js'
