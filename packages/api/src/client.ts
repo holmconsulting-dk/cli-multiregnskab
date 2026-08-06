@@ -83,6 +83,7 @@ export async function loginWithPassword(username: string, password: string): Pro
 
 export function createClient(config: AuthConfig) {
   const client = createFetchClient<paths>({ baseUrl: BASE_URL })
+  const pendingRequests = new WeakMap<Request, Request>()
 
   const authMiddleware: Middleware = {
     async onRequest({ request }) {
@@ -91,6 +92,7 @@ export function createClient(config: AuthConfig) {
 
       if (!isTokenExpired(auth.tokenExpires)) {
         request.headers.set('Authorization', `Bearer ${auth.token}`)
+        pendingRequests.set(request, request.clone())
         return request
       }
 
@@ -98,7 +100,35 @@ export function createClient(config: AuthConfig) {
       if (!refreshed) throw new AuthenticationError('Session expired. Please log in again.')
       await config.onAuthUpdated(refreshed)
       request.headers.set('Authorization', `Bearer ${refreshed.token}`)
+      pendingRequests.set(request, request.clone())
       return request
+    },
+
+    async onResponse({ request, response }) {
+      if (response.status !== 401) {
+        pendingRequests.delete(request)
+        return response
+      }
+
+      const savedRequest = pendingRequests.get(request)
+      pendingRequests.delete(request)
+
+      const auth = await config.getAuth()
+      if (!auth) throw new AuthenticationError('Session expired. Please log in again.')
+
+      const refreshed = await refreshToken(auth)
+      if (!refreshed) throw new AuthenticationError('Session expired. Please log in again.')
+      await config.onAuthUpdated(refreshed)
+
+      const retryRequest = savedRequest ?? new Request(request.url, { method: request.method })
+      retryRequest.headers.set('Authorization', `Bearer ${refreshed.token}`)
+      const retryResponse = await fetch(retryRequest)
+
+      if (retryResponse.status === 401) {
+        throw new AuthenticationError('Session expired. Please log in again.')
+      }
+
+      return retryResponse
     },
   }
 
