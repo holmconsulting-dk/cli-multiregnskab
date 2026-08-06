@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ApiOperationError } from './types.js'
 import type { ApiClient } from './types.js'
 
 export const listBankAccountsOp = {
@@ -8,10 +9,10 @@ export const listBankAccountsOp = {
     companyXid: z.number().describe('Company ID'),
   },
   execute: async (input: { companyXid: number }, client: ApiClient) => {
-    const { data, error } = await client.GET('/bankAccounts/{companyXid}', {
+    const { data, error, response } = await client.GET('/bankAccounts/{companyXid}', {
       params: { path: { companyXid: input.companyXid } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }
@@ -23,10 +24,10 @@ export const getBankBalancesOp = {
     companyXid: z.number().describe('Company ID'),
   },
   execute: async (input: { companyXid: number }, client: ApiClient) => {
-    const { data, error } = await client.GET('/bankBalances/{companyXid}', {
+    const { data, error, response } = await client.GET('/bankBalances/{companyXid}', {
       params: { path: { companyXid: input.companyXid } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }
@@ -44,7 +45,7 @@ export const getBankPostingsOp = {
     input: { companyXid: number; bankAccountXid: number; fromDate?: string; toDate?: string },
     client: ApiClient
   ) => {
-    const { data, error } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
+    const { data, error, response } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
       params: {
         path: { companyXid: input.companyXid, bankAccountXid: input.bankAccountXid },
         query: {
@@ -53,7 +54,7 @@ export const getBankPostingsOp = {
         },
       },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }

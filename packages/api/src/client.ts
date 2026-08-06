@@ -70,10 +70,18 @@ async function refreshToken(expiredAuth: StoredAuth): Promise<StoredAuth | null>
 
 export async function loginWithPassword(username: string, password: string): Promise<StoredAuth> {
   const client = createFetchClient<paths>({ baseUrl: BASE_URL })
-  const { data, error } = await client.POST('/login', {
+  const { data, error, response } = await client.POST('/login', {
     body: { userName: username, password },
   })
-  if (error || !data) throw new Error('Login failed. Check your username and password.')
+  if (error || !data) {
+    if (response && response.status === 401) {
+      throw new Error('Login failed. Check your username and password.')
+    }
+    if (response) {
+      throw new Error(`Login failed. HTTP ${response.status} ${response.statusText}`)
+    }
+    throw new Error('Login failed. Could not reach the server.')
+  }
   return {
     token: data.token,
     tokenExpires: data.tokenExpires,

@@ -75,7 +75,7 @@ export async function create(options: CreateOptions, cmd: Command) {
       },
       client
     )
-    .catch((e) => apiError(cmd, String(e instanceof Error ? e.message : 'Failed to create invoice.'), e))
+    .catch((e) => apiError(cmd, 'Failed to create invoice.', e))
 
   console.log('Invoice created successfully.')
   console.log(`ID: ${result.xid}`)

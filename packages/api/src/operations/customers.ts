@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ApiOperationError } from './types.js'
 import type { ApiClient } from './types.js'
 
 const VALID_LANGUAGES = ['DA', 'EN'] as const
@@ -37,10 +38,10 @@ export const listCustomersOp = {
     search: z.string().optional().describe('Filter by customer name or number'),
   },
   execute: async (input: { companyXid: number; search?: string }, client: ApiClient) => {
-    const { data, error } = await client.GET('/customers/{companyXid}', {
+    const { data, error, response } = await client.GET('/customers/{companyXid}', {
       params: { path: { companyXid: input.companyXid } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     let customers = data.customers ?? []
     if (input.search) {
       const term = input.search.toLowerCase()
@@ -124,7 +125,7 @@ Example — business customer:
       if (!input.electronicInvoiceDestinationType) throw new Error('electronicInvoiceDestinationType is required when electronicInvoice is true')
       if (!input.electronicInvoiceAddress) throw new Error('electronicInvoiceAddress is required when electronicInvoice is true')
     }
-    const { data, error } = await client.POST('/customers', {
+    const { data, error, response } = await client.POST('/customers', {
       body: {
         companyXid: input.companyXid,
         xid: 0,
@@ -151,7 +152,7 @@ Example — business customer:
         ...(input.electronicInvoiceAddress && { electronicInvoiceAddress: input.electronicInvoiceAddress }),
       },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return { xid: data.xid }
   },
 }

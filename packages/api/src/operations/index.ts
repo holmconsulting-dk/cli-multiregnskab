@@ -35,4 +35,5 @@ export { listBankAccountsOp, getBankBalancesOp, getBankPostingsOp } from './bank
 export { listProductsOp, listProductTypesOp, listUnitsOfMeasureOp } from './products.js'
 export { createInvoiceOp } from './invoices.js'
 export type { CreateInvoiceInput, InvoiceLine } from './invoices.js'
+export { ApiOperationError } from './types.js'
 export type { ApiClient, RegistrableOperation } from './types.js'

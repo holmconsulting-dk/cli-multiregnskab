@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ApiOperationError } from './types.js'
 import type { ApiClient } from './types.js'
 
 export const listProductsOp = {
@@ -8,10 +9,10 @@ export const listProductsOp = {
     companyXid: z.number().describe('Company ID'),
   },
   execute: async (input: { companyXid: number }, client: ApiClient) => {
-    const { data, error } = await client.GET('/products/{companyXid}', {
+    const { data, error, response } = await client.GET('/products/{companyXid}', {
       params: { path: { companyXid: input.companyXid } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }
@@ -23,10 +24,10 @@ export const listProductTypesOp = {
     companyXid: z.number().describe('Company ID'),
   },
   execute: async (input: { companyXid: number }, client: ApiClient) => {
-    const { data, error } = await client.GET('/productTypes/{companyXid}', {
+    const { data, error, response } = await client.GET('/productTypes/{companyXid}', {
       params: { path: { companyXid: input.companyXid } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }
@@ -38,10 +39,10 @@ export const listUnitsOfMeasureOp = {
     language: z.enum(['DA', 'EN']).describe('Language for unit names'),
   },
   execute: async (input: { language: 'DA' | 'EN' }, client: ApiClient) => {
-    const { data, error } = await client.GET('/unitsOfMeasure/{language}', {
+    const { data, error, response } = await client.GET('/unitsOfMeasure/{language}', {
       params: { path: { language: input.language } },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ApiOperationError } from './types.js'
 import type { ApiClient } from './types.js'
 
 export type InvoiceLine = {
@@ -99,7 +100,7 @@ Example lines:
       if (!line.amount) throw new Error(`Line ${i}: missing required field "amount"`)
       if (!line.productTypeXid) throw new Error(`Line ${i}: missing required field "productTypeXid". Note: productXid does not replace productTypeXid`)
     }
-    const { data, error } = await client.POST('/invoices', {
+    const { data, error, response } = await client.POST('/invoices', {
       body: {
         companyXid: input.companyXid,
         invoiceXid: 0,
@@ -124,7 +125,7 @@ Example lines:
         ...(input.title && { title: input.title }),
       },
     })
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return { xid: data.xid }
   },
 }

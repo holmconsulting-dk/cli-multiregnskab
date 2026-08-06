@@ -1,3 +1,4 @@
+import { ApiOperationError } from './types.js'
 import type { ApiClient } from './types.js'
 
 export const listCompaniesOp = {
@@ -5,8 +6,8 @@ export const listCompaniesOp = {
   description: 'List all companies the user has access to',
   inputSchema: {} as Record<string, never>,
   execute: async (_input: Record<string, never>, client: ApiClient) => {
-    const { data, error } = await client.GET('/companies')
-    if (error || !data) throw new Error(JSON.stringify(error ?? 'Unknown error'))
+    const { data, error, response } = await client.GET('/companies')
+    if (error || !data) throw new ApiOperationError(JSON.stringify(error ?? 'Unknown error'), error, response)
     return data
   },
 }
