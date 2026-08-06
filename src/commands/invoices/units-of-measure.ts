@@ -13,12 +13,12 @@ export async function unitsOfMeasure(options: { lang: string }, cmd: Command) {
   }
 
   const client = createClient()
-  const { data, error } = await client.GET('/unitsOfMeasure/{language}', {
+  const { data, error, response } = await client.GET('/unitsOfMeasure/{language}', {
     params: { path: { language: lang } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve units of measure.', error)
+    apiError(cmd, 'Failed to retrieve units of measure.', error, response)
   }
 
   const units = data.uomList

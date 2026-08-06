@@ -132,13 +132,13 @@ export async function create(options: CreateOptions, cmd: Command) {
     const toDateIncl = options.postingTo ?? isoDate(new Date())
 
     const client = createClient()
-    const { data, error } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
+    const { data, error, response } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
       params: {
         path: { companyXid, bankAccountXid },
         query: { fromDateIncl, toDateIncl },
       },
     })
-    if (error || !data) apiError(cmd, 'Failed to fetch bank postings.', error)
+    if (error || !data) apiError(cmd, 'Failed to fetch bank postings.', error, response)
 
     const posting = data.bpList.find((p) => p.xid === bankPostingXid)
     if (!posting) {
@@ -189,14 +189,16 @@ export async function create(options: CreateOptions, cmd: Command) {
     fail(cmd, `Too many files: ${totalPlanned}. A registration can have at most ${MAX_ATTACHED_FILES}.`)
   }
 
+  const uploadedXids: number[] = []
   for (const path of options.attachFile ?? []) {
     const xid = await uploadFileFromPath(cmd, companyXid, path)
     console.log(`Uploaded ${path} -> ${xid}`)
     fileXids.push(xid)
+    uploadedXids.push(xid)
   }
 
   const client = createClient()
-  const { data, error } = await client.POST('/suggestedRegistrations', {
+  const { data, error, response } = await client.POST('/suggestedRegistrations', {
     body: {
       companyXid,
       date,
@@ -213,7 +215,20 @@ export async function create(options: CreateOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to create suggested registration.', error)
+    if (uploadedXids.length > 0) {
+      console.error(`Registration failed after uploading ${uploadedXids.length} file(s). Attempting cleanup...`)
+      for (const xid of uploadedXids) {
+        const { error: delErr } = await client.DELETE('/archiveFile/{companyXid}/{archiveFileXid}', {
+          params: { path: { companyXid, archiveFileXid: xid } },
+        })
+        if (delErr) {
+          console.error(`  Could not delete orphaned file ${xid} — clean up in Multi-Regnskab manually.`)
+        } else {
+          console.error(`  Deleted orphaned file ${xid}.`)
+        }
+      }
+    }
+    apiError(cmd, 'Failed to create suggested registration.', error, response)
   }
 
   console.log('Suggested registration created successfully.')

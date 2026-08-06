@@ -11,12 +11,12 @@ export async function list(options: { company?: string }, cmd: Command) {
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/products/{companyXid}', {
+  const { data, error, response } = await client.GET('/products/{companyXid}', {
     params: { path: { companyXid } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve products.', error)
+    apiError(cmd, 'Failed to retrieve products.', error, response)
   }
 
   const products = data.productList

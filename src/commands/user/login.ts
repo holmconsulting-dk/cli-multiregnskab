@@ -6,12 +6,18 @@ export async function login() {
   const password = await promptPassword('Password: ')
 
   const client = createUnauthenticatedClient()
-  const { data, error } = await client.POST('/login', {
+  const { data, error, response } = await client.POST('/login', {
     body: { userName: username, password },
   })
 
   if (error || !data) {
-    console.error('Login failed. Check your username and password.')
+    if (response && response.status === 401) {
+      console.error('Login failed. Check your username and password.')
+    } else if (response) {
+      console.error(`Login failed. HTTP ${response.status} ${response.statusText}`)
+    } else {
+      console.error('Login failed. Could not reach the server.')
+    }
     process.exit(1)
   }
 

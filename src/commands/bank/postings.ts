@@ -27,7 +27,7 @@ export async function postings(options: PostingsOptions, cmd: Command) {
 
   const client = createClient()
 
-  const { data, error } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
+  const { data, error, response } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
     params: {
       path: { companyXid, bankAccountXid },
       query: {
@@ -38,7 +38,7 @@ export async function postings(options: PostingsOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve bank postings.', error)
+    apiError(cmd, 'Failed to retrieve bank postings.', error, response)
   }
 
   const items = data.bpList
