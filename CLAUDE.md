@@ -22,6 +22,7 @@ Or scoped:
 
 - `bun run --cwd packages/api build` — compile api to `packages/api/dist/`
 - `bun run --cwd packages/cli build` — compile cli binary to `packages/cli/dist/`
+- `bun run --cwd packages/api pack` — build a local `.tgz` for testing outside the workspace (e.g. by the MCP server repo); not committed, gitignored
 
 ## Architecture
 
