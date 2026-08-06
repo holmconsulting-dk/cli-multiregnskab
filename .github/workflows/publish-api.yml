@@ -3,6 +3,7 @@ name: Publish API package
 on:
   push:
     tags: ['api-v*']
+  workflow_dispatch: {}
 
 jobs:
   publish:
