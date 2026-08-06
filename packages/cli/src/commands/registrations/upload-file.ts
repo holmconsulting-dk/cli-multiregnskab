@@ -60,18 +60,20 @@ export async function uploadFileFromPath(
   }
 
   const client = getClient()
-  const { data, error, response } = await client.POST('/filesForUseInRegistrations', {
-    body: {
-      companyXid,
-      fileBodyBase64: buf.toString('base64'),
-      contentType,
-      fileName,
-      friendlyFilename: opts.name ?? fileName,
-      keepHiddenUntilRegistration: !opts.visible,
-      ...(opts.date && { date: opts.date }),
-      ...(opts.comment && { comment: opts.comment }),
-    },
-  })
+  const { data, error, response } = await client
+    .POST('/filesForUseInRegistrations', {
+      body: {
+        companyXid,
+        fileBodyBase64: buf.toString('base64'),
+        contentType,
+        fileName,
+        friendlyFilename: opts.name ?? fileName,
+        keepHiddenUntilRegistration: !opts.visible,
+        ...(opts.date && { date: opts.date }),
+        ...(opts.comment && { comment: opts.comment }),
+      },
+    })
+    .catch((e) => apiError(cmd, `Failed to upload file: ${path}`, e))
 
   if (error || !data) {
     apiError(cmd, `Failed to upload file: ${path}`, error, response)

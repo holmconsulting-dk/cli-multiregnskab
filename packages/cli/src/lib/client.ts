@@ -1,8 +1,13 @@
 import { createClient, readAuth, writeAuth } from '@holmconsulting/multiregnskab-api'
 
+let client: ReturnType<typeof createClient> | undefined
+
 export function getClient() {
-  return createClient({
-    getAuth: readAuth,
-    onAuthUpdated: writeAuth,
-  })
+  if (!client) {
+    client = createClient({
+      getAuth: readAuth,
+      onAuthUpdated: writeAuth,
+    })
+  }
+  return client
 }

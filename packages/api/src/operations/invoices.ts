@@ -29,7 +29,7 @@ export type CreateInvoiceInput = {
 const invoiceLineSchema = z.object({
   lineText: z.string().describe('Line description'),
   amount: z.string().describe('Line total amount (always required, even when priceEach × numberOfUnits covers it)'),
-  productTypeXid: z.number().describe('Product type ID — use list_product_types to find. Note: productXid does not replace productTypeXid'),
+  productTypeXid: z.number().describe('Product type ID — look up valid product types for the company first. Note: productXid does not replace productTypeXid'),
   lineNote: z.string().optional().describe('Additional line note'),
   numberOfUnits: z.string().optional().describe('Number of units'),
   unitOfMeasureCode: z.string().optional().describe('Unit of measure code'),
@@ -45,12 +45,12 @@ export const createInvoiceOp = {
 Required fields per line:
   lineText          Description of the line item
   amount            Total amount before VAT — ALWAYS required, even when priceEach and numberOfUnits are provided
-  productTypeXid    Product type ID — use list_product_types to find
+  productTypeXid    Product type ID — look up valid product types for the company first
 
 Optional fields per line:
   lineNote          Additional description
   numberOfUnits     Quantity (e.g. "1", "2", "2.5")
-  unitOfMeasureCode Unit code (e.g. "DAY", "EA") — use list_units_of_measure to find
+  unitOfMeasureCode Unit code (e.g. "DAY", "EA") — look up valid units of measure first
   priceEach         Price per unit — also set amount to the same total value
   productXid        Rarely needed. Does NOT replace productTypeXid — both must be provided if used
 

@@ -132,12 +132,14 @@ export async function create(options: CreateOptions, cmd: Command) {
     const toDateIncl = options.postingTo ?? isoDate(new Date())
 
     const client = getClient()
-    const { data, error, response } = await client.GET('/bankPostings/{companyXid}/{bankAccountXid}', {
-      params: {
-        path: { companyXid, bankAccountXid },
-        query: { fromDateIncl, toDateIncl },
-      },
-    })
+    const { data, error, response } = await client
+      .GET('/bankPostings/{companyXid}/{bankAccountXid}', {
+        params: {
+          path: { companyXid, bankAccountXid },
+          query: { fromDateIncl, toDateIncl },
+        },
+      })
+      .catch((e) => apiError(cmd, 'Failed to fetch bank postings.', e))
     if (error || !data) apiError(cmd, 'Failed to fetch bank postings.', error, response)
 
     const posting = data.bpList.find((p) => p.xid === bankPostingXid)
@@ -189,38 +191,43 @@ export async function create(options: CreateOptions, cmd: Command) {
     fail(cmd, `Too many files: ${totalPlanned}. A registration can have at most ${MAX_ATTACHED_FILES}.`)
   }
 
-  const uploadedXids: number[] = []
-  for (const path of options.attachFile ?? []) {
-    const xid = await uploadFileFromPath(cmd, companyXid, path)
-    console.log(`Uploaded ${path} -> ${xid}`)
-    fileXids.push(xid)
-    uploadedXids.push(xid)
-  }
+  const uploadedXids = await Promise.all(
+    (options.attachFile ?? []).map(async (path) => {
+      const xid = await uploadFileFromPath(cmd, companyXid, path)
+      console.log(`Uploaded ${path} -> ${xid}`)
+      return xid
+    })
+  )
+  fileXids.push(...uploadedXids)
 
   const client = getClient()
-  const { data, error, response } = await client.POST('/suggestedRegistrations', {
-    body: {
-      companyXid,
-      date,
-      description,
-      ...(supplierXid && { supplierXid }),
-      ...(customerXid && { customerXid }),
-      debitCreditlines: lines!.map((l) => ({
-        accountNumber: l.accountNumber,
-        amount: String(l.amount),
-        ...(l.vatCode && { vatCode: l.vatCode }),
-      })),
-      ...(fileXids.length > 0 && { filesToAttachXids: fileXids.map((xid) => ({ xid })) }),
-    },
-  })
+  const { data, error, response } = await client
+    .POST('/suggestedRegistrations', {
+      body: {
+        companyXid,
+        date,
+        description,
+        ...(supplierXid && { supplierXid }),
+        ...(customerXid && { customerXid }),
+        debitCreditlines: lines!.map((l) => ({
+          accountNumber: l.accountNumber,
+          amount: String(l.amount),
+          ...(l.vatCode && { vatCode: l.vatCode }),
+        })),
+        ...(fileXids.length > 0 && { filesToAttachXids: fileXids.map((xid) => ({ xid })) }),
+      },
+    })
+    .catch((e) => ({ data: undefined, error: e, response: undefined }))
 
   if (error || !data) {
     if (uploadedXids.length > 0) {
       console.error(`Registration failed after uploading ${uploadedXids.length} file(s). Attempting cleanup...`)
       for (const xid of uploadedXids) {
-        const { error: delErr } = await client.DELETE('/archiveFile/{companyXid}/{archiveFileXid}', {
-          params: { path: { companyXid, archiveFileXid: xid } },
-        })
+        const { error: delErr } = await client
+          .DELETE('/archiveFile/{companyXid}/{archiveFileXid}', {
+            params: { path: { companyXid, archiveFileXid: xid } },
+          })
+          .catch((e) => ({ error: e }))
         if (delErr) {
           console.error(`  Could not delete orphaned file ${xid} — clean up in Multi-Regnskab manually.`)
         } else {
