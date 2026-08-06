@@ -1,6 +1,6 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { listCustomersOp } from '@holmconsulting/multiregnskab-api'
+import { listCustomersOp } from '@holmconsulting-dk/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { apiError } from '../../lib/error.js'
 

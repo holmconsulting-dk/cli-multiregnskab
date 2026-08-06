@@ -1,4 +1,4 @@
-import { clearAuth } from '@holmconsulting/multiregnskab-api'
+import { clearAuth } from '@holmconsulting-dk/multiregnskab-api'
 import { getClient } from '../../lib/client.js'
 
 export async function logout() {

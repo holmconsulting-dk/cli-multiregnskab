@@ -1,7 +1,7 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { createCustomerOp } from '@holmconsulting/multiregnskab-api'
-import type { CreateCustomerInput } from '@holmconsulting/multiregnskab-api'
+import { createCustomerOp } from '@holmconsulting-dk/multiregnskab-api'
+import type { CreateCustomerInput } from '@holmconsulting-dk/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
 

@@ -1,6 +1,6 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { getBankBalancesOp } from '@holmconsulting/multiregnskab-api'
+import { getBankBalancesOp } from '@holmconsulting-dk/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { apiError } from '../../lib/error.js'
 

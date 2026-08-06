@@ -1,8 +1,8 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
 import { readFileSync, existsSync } from 'fs'
-import { createInvoiceOp } from '@holmconsulting/multiregnskab-api'
-import type { InvoiceLine } from '@holmconsulting/multiregnskab-api'
+import { createInvoiceOp } from '@holmconsulting-dk/multiregnskab-api'
+import type { InvoiceLine } from '@holmconsulting-dk/multiregnskab-api'
 import { setupCompanyOption, parseCompanyXid } from '../../lib/company.js'
 import { fail, apiError } from '../../lib/error.js'
 

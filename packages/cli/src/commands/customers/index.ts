@@ -1,7 +1,7 @@
 import { createArea } from '../../lib/area.js'
 import { setup as listSetup, list } from './list.js'
 import { setup as createSetup, create } from './create.js'
-import { createCustomerOp } from '@holmconsulting/multiregnskab-api'
+import { createCustomerOp } from '@holmconsulting-dk/multiregnskab-api'
 
 export const customersArea = createArea({
   name: 'customers',

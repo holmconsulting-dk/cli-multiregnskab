@@ -1,6 +1,6 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { listUnitsOfMeasureOp } from '@holmconsulting/multiregnskab-api'
+import { listUnitsOfMeasureOp } from '@holmconsulting-dk/multiregnskab-api'
 import { fail, apiError } from '../../lib/error.js'
 
 export function setup(cmd: Command) {

@@ -1,6 +1,6 @@
 import { getClient } from '../../lib/client.js'
 import { Command } from 'commander'
-import { listCompaniesOp } from '@holmconsulting/multiregnskab-api'
+import { listCompaniesOp } from '@holmconsulting-dk/multiregnskab-api'
 import { apiError } from '../../lib/error.js'
 
 export async function list(_options: unknown, cmd: Command) {

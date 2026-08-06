@@ -1,4 +1,4 @@
-import { createClient, readAuth, writeAuth } from '@holmconsulting/multiregnskab-api'
+import { createClient, readAuth, writeAuth } from '@holmconsulting-dk/multiregnskab-api'
 
 let client: ReturnType<typeof createClient> | undefined
 

@@ -1,5 +1,5 @@
 import type { Command } from 'commander'
-import { AuthenticationError, ApiOperationError } from '@holmconsulting/multiregnskab-api'
+import { AuthenticationError, ApiOperationError } from '@holmconsulting-dk/multiregnskab-api'
 
 export function fail(cmd: Command, message: string): never {
   console.error(cmd.helpInformation())

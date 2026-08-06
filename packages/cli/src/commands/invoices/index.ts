@@ -1,7 +1,7 @@
 import { createArea } from '../../lib/area.js'
 import { setup as createSetup, create } from './create.js'
 import { setup as unitsOfMeasureSetup, unitsOfMeasure } from './units-of-measure.js'
-import { createInvoiceOp } from '@holmconsulting/multiregnskab-api'
+import { createInvoiceOp } from '@holmconsulting-dk/multiregnskab-api'
 
 export const invoicesArea = createArea({
   name: 'invoices',

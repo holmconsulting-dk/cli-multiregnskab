@@ -1,4 +1,4 @@
-import { loginWithPassword, writeAuth } from '@holmconsulting/multiregnskab-api'
+import { loginWithPassword, writeAuth } from '@holmconsulting-dk/multiregnskab-api'
 import { prompt, promptPassword } from '../../lib/prompt.js'
 
 export async function login() {

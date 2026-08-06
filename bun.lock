@@ -6,8 +6,8 @@
       "name": "@holmconsulting/cli-multiregnskab",
     },
     "packages/api": {
-      "name": "@holmconsulting/multiregnskab-api",
-      "version": "0.1.0",
+      "name": "@holmconsulting-dk/multiregnskab-api",
+      "version": "0.1.0-alpha.1",
       "dependencies": {
         "openapi-fetch": "^0.13.5",
         "zod": "^4.4.3",
@@ -25,7 +25,7 @@
         "mr": "./dist/index.js",
       },
       "dependencies": {
-        "@holmconsulting/multiregnskab-api": "workspace:*",
+        "@holmconsulting-dk/multiregnskab-api": "workspace:*",
         "commander": "^12.0.0",
       },
       "devDependencies": {
@@ -39,9 +39,9 @@
 
     "@babel/helper-validator-identifier": ["@babel/helper-validator-identifier@7.28.5", "", {}, "sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q=="],
 
-    "@holmconsulting/cli-multiregnskab": ["@holmconsulting/cli-multiregnskab@workspace:packages/cli"],
+    "@holmconsulting-dk/multiregnskab-api": ["@holmconsulting-dk/multiregnskab-api@workspace:packages/api"],
 
-    "@holmconsulting/multiregnskab-api": ["@holmconsulting/multiregnskab-api@workspace:packages/api"],
+    "@holmconsulting/cli-multiregnskab": ["@holmconsulting/cli-multiregnskab@workspace:packages/cli"],
 
     "@redocly/ajv": ["@redocly/ajv@8.11.2", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2", "uri-js-replace": "^1.0.1" } }, "sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg=="],
 

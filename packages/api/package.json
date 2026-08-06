@@ -1,5 +1,5 @@
 {
-  "name": "@holmconsulting/multiregnskab-api",
+  "name": "@holmconsulting-dk/multiregnskab-api",
   "version": "0.1.0-alpha.1",
   "type": "module",
   "main": "./dist/index.js",

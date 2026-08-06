@@ -4,7 +4,7 @@
 
 Bun workspace monorepo with two packages:
 
-- **`packages/api`** (`@holmconsulting/multiregnskab-api`) — typed openapi-fetch client, auth utilities, and generated types. Independently consumable by MCP servers and other integrations.
+- **`packages/api`** (`@holmconsulting-dk/multiregnskab-api`) — typed openapi-fetch client, auth utilities, and generated types. Independently consumable by MCP servers and other integrations.
 - **`packages/cli`** (`@holmconsulting/cli-multiregnskab`) — CLI tool (`mr`) built with Commander.js. Depends on `packages/api` via `workspace:*`.
 
 The API spec lives in `public-client-api-v1.yaml` (repo root, shared source of truth).
@@ -51,7 +51,7 @@ The spec `required` fields are not always accurate — the API may enforce addit
 Two independent release tracks, both triggered by tag push:
 
 - `v*` tags → GitHub Actions builds CLI binaries for macOS arm64/x64, Linux x64, Windows x64
-- `api-v*` tags → GitHub Actions publishes `@holmconsulting/multiregnskab-api` to GitHub Packages
+- `api-v*` tags → GitHub Actions publishes `@holmconsulting-dk/multiregnskab-api` to GitHub Packages
 
 ## Known API quirks
 

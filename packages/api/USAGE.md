@@ -1,13 +1,13 @@
-# @holmconsulting/multiregnskab-api
+# @holmconsulting-dk/multiregnskab-api
 
 Typed API client for the Multiregnskab API. Provides authentication, token lifecycle management, and typed business operations. Designed to be consumed by both the CLI tool and MCP servers.
 
 ## Installation
 
 ```bash
-bun add @holmconsulting/multiregnskab-api
+bun add @holmconsulting-dk/multiregnskab-api
 # or
-npm install @holmconsulting/multiregnskab-api
+npm install @holmconsulting-dk/multiregnskab-api
 ```
 
 ## Authentication
@@ -17,7 +17,7 @@ Authentication follows a two-step pattern: obtain tokens via `loginWithPassword`
 ### Step 1 — Exchange credentials for tokens
 
 ```typescript
-import { loginWithPassword } from '@holmconsulting/multiregnskab-api'
+import { loginWithPassword } from '@holmconsulting-dk/multiregnskab-api'
 
 const auth = await loginWithPassword(username, password)
 // auth: { token, tokenExpires, refreshToken }
@@ -28,7 +28,7 @@ Store the returned `StoredAuth` in whatever persistence layer suits your consume
 ### Step 2 — Create an authenticated client
 
 ```typescript
-import { createClient } from '@holmconsulting/multiregnskab-api'
+import { createClient } from '@holmconsulting-dk/multiregnskab-api'
 
 const client = createClient({
   getAuth: () => myStore.load(),          // called before each request
@@ -43,7 +43,7 @@ const client = createClient({
 If `getAuth` returns `null` or token refresh fails, the client throws `AuthenticationError`. Import and check for it to handle auth failures distinctly from API errors:
 
 ```typescript
-import { AuthenticationError } from '@holmconsulting/multiregnskab-api'
+import { AuthenticationError } from '@holmconsulting-dk/multiregnskab-api'
 
 try {
   const data = await someOp.execute(input, client)
@@ -61,7 +61,7 @@ try {
 The CLI stores tokens on disk at `~/.config/mr/auth.json`. Helper utilities `readAuth` and `writeAuth` are exported for exactly this pattern:
 
 ```typescript
-import { createClient, loginWithPassword, readAuth, writeAuth } from '@holmconsulting/multiregnskab-api'
+import { createClient, loginWithPassword, readAuth, writeAuth } from '@holmconsulting-dk/multiregnskab-api'
 
 // One-time login
 const auth = await loginWithPassword(username, password)
@@ -81,7 +81,7 @@ const client = createClient({
 The MCP server manages its own token storage (e.g. a database) and injects credentials programmatically — no disk access needed:
 
 ```typescript
-import { createClient, loginWithPassword } from '@holmconsulting/multiregnskab-api'
+import { createClient, loginWithPassword } from '@holmconsulting-dk/multiregnskab-api'
 
 // Initial login (once per user session)
 const auth = await loginWithPassword(username, password)
@@ -103,7 +103,7 @@ Operations are named, typed, schema-bearing functions that encapsulate all API c
 ### Using operations directly
 
 ```typescript
-import { listCompaniesOp, listCustomersOp, createInvoiceOp } from '@holmconsulting/multiregnskab-api'
+import { listCompaniesOp, listCustomersOp, createInvoiceOp } from '@holmconsulting-dk/multiregnskab-api'
 
 const companies = await listCompaniesOp.execute({}, client)
 
@@ -122,10 +122,10 @@ const invoice = await createInvoiceOp.execute({
 `createOperations(client)` returns all operations as a uniform list ready for registration in an MCP server:
 
 ```typescript
-import { createOperations } from '@holmconsulting/multiregnskab-api'
+import { createOperations } from '@holmconsulting-dk/multiregnskab-api'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
-export function registerTools(server: McpServer, client: ReturnType<typeof import('@holmconsulting/multiregnskab-api').createClient>) {
+export function registerTools(server: McpServer, client: ReturnType<typeof import('@holmconsulting-dk/multiregnskab-api').createClient>) {
   for (const op of createOperations(client)) {
     server.registerTool(
       op.name,
@@ -175,8 +175,8 @@ These are exported for consumers that manage their own file-based storage:
 ## Types
 
 ```typescript
-import type { StoredAuth, AuthConfig, AuthenticationError, RegistrableOperation, CreateCustomerInput, CreateInvoiceInput, InvoiceLine } from '@holmconsulting/multiregnskab-api'
+import type { StoredAuth, AuthConfig, AuthenticationError, RegistrableOperation, CreateCustomerInput, CreateInvoiceInput, InvoiceLine } from '@holmconsulting-dk/multiregnskab-api'
 
 // Generated OpenAPI types
-import type { paths, components } from '@holmconsulting/multiregnskab-api'
+import type { paths, components } from '@holmconsulting-dk/multiregnskab-api'
 ```
