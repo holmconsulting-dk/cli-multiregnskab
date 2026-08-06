@@ -11,12 +11,12 @@ export async function productTypes(options: { company?: string }, cmd: Command) 
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/productTypes/{companyXid}', {
+  const { data, error, response } = await client.GET('/productTypes/{companyXid}', {
     params: { path: { companyXid } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve product types.', error)
+    apiError(cmd, 'Failed to retrieve product types.', error, response)
   }
 
   const types = data.ptList

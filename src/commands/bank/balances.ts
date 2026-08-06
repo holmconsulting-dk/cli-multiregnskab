@@ -11,12 +11,12 @@ export async function balances(options: { company?: string }, cmd: Command) {
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/bankBalances/{companyXid}', {
+  const { data, error, response } = await client.GET('/bankBalances/{companyXid}', {
     params: { path: { companyXid } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve bank balances.', error)
+    apiError(cmd, 'Failed to retrieve bank balances.', error, response)
   }
 
   const items = data.bbList

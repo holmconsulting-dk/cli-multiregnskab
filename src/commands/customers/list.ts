@@ -12,12 +12,12 @@ export async function list(search: string | undefined, options: { company?: stri
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/customers/{companyXid}', {
+  const { data, error, response } = await client.GET('/customers/{companyXid}', {
     params: { path: { companyXid } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve customers.', error)
+    apiError(cmd, 'Failed to retrieve customers.', error, response)
   }
 
   let customers = data.customers ?? []

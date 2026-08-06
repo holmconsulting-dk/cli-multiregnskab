@@ -4,10 +4,10 @@ import { apiError } from '../../lib/error.js'
 
 export async function list(_options: unknown, cmd: Command) {
   const client = createClient()
-  const { data, error } = await client.GET('/companies')
+  const { data, error, response } = await client.GET('/companies')
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve companies.', error)
+    apiError(cmd, 'Failed to retrieve companies.', error, response)
   }
 
   const companies = data.companiesAndAccessList

@@ -79,7 +79,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   }
 
   const client = createClient()
-  const { data, error } = await client.POST('/invoices', {
+  const { data, error, response } = await client.POST('/invoices', {
     body: {
       companyXid,
       invoiceXid: 0,
@@ -106,7 +106,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to create invoice.', error)
+    apiError(cmd, 'Failed to create invoice.', error, response)
   }
 
   console.log('Invoice created successfully.')

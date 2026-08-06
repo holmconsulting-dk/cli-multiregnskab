@@ -103,7 +103,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   }
 
   const client = createClient()
-  const { data, error } = await client.POST('/customers', {
+  const { data, error, response } = await client.POST('/customers', {
     body: {
       companyXid,
       xid: 0,
@@ -132,7 +132,7 @@ export async function create(options: CreateOptions, cmd: Command) {
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to create customer.', error)
+    apiError(cmd, 'Failed to create customer.', error, response)
   }
 
   console.log('Customer created successfully.')

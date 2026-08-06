@@ -11,12 +11,12 @@ export async function accounts(options: { company?: string }, cmd: Command) {
   const companyXid = parseCompanyXid(options, cmd)
   const client = createClient()
 
-  const { data, error } = await client.GET('/bankAccounts/{companyXid}', {
+  const { data, error, response } = await client.GET('/bankAccounts/{companyXid}', {
     params: { path: { companyXid } },
   })
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve bank accounts.', error)
+    apiError(cmd, 'Failed to retrieve bank accounts.', error, response)
   }
 
   const items = data.accounts ?? []
