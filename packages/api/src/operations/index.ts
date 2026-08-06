@@ -22,6 +22,7 @@ export function createOperations(client: ApiClient): RegistrableOperation[] {
   return allOps.map((op) => ({
     name: op.name,
     description: op.description,
+    info: (op as { info?: string }).info,
     inputSchema: op.inputSchema as RegistrableOperation['inputSchema'],
     execute: (input: Record<string, unknown>) => op.execute(input as never, client),
   }))

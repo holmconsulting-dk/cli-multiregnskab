@@ -55,6 +55,47 @@ export const listCustomersOp = {
 export const createCustomerOp = {
   name: 'create_customer',
   description: 'Create a new customer for a company',
+  info: `Creates a new customer for a company.
+
+Customer type:
+  Default is a business customer. Set privatePerson: true for a private person.
+  This affects how the customer appears on invoices.
+
+Payment terms:
+  paymentTermsType: RUNNING_MONTH | NET | NET_CASH | ALREADY_PAID
+  paymentTermsDays: number of days for the payment term (e.g. 30) — independent of paymentTermsType
+
+Electronic invoicing (all three required together when electronicInvoice is true):
+  electronicInvoiceDestinationType: DK_GLN | DK_CVR | DK_PNUMMER | DK_SENUMMER | PEPPOL
+  electronicInvoiceAddress: the destination address for the e-invoice
+
+Example — private person:
+{
+  "companyXid": 123,
+  "customerName": "Hans Andersen",
+  "currencyCode": "DKK",
+  "address1": "Markvejen 20",
+  "zipCode": "8000",
+  "city": "Aarhus",
+  "countryCode": "DK",
+  "languageCode": "DA",
+  "paymentTermsType": "NET",
+  "privatePerson": true
+}
+
+Example — business customer:
+{
+  "companyXid": 123,
+  "customerName": "Acme ApS",
+  "currencyCode": "DKK",
+  "address1": "Industrivej 1",
+  "zipCode": "2100",
+  "city": "Copenhagen",
+  "countryCode": "DK",
+  "languageCode": "DA",
+  "paymentTermsType": "NET",
+  "companyIdentifier": "12345678"
+}`,
   inputSchema: {
     companyXid: z.number().describe('Company ID'),
     customerName: z.string().describe('Customer name'),

@@ -4,7 +4,7 @@ import { type SubCommandConfig, createSubCommand } from './subcommand.js'
 export interface AreaConfig {
   name: string
   description: string
-  info: string
+  info?: string
   subcommands: SubCommandConfig[]
 }
 
@@ -15,7 +15,7 @@ export function createArea(config: AreaConfig): Command {
     new Command('info')
       .description(`Show info about the ${config.name} area`)
       .action(() => {
-        console.log(config.info)
+        console.log(config.info ?? config.description)
         console.log()
         console.log('Available commands:')
         const maxLen = Math.max(...config.subcommands.map((s) => s.name.length))

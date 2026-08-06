@@ -39,6 +39,41 @@ const invoiceLineSchema = z.object({
 export const createInvoiceOp = {
   name: 'create_invoice',
   description: 'Create a new invoice or credit note for a customer',
+  info: `Creates a new invoice (or offer/credit note) for a company in draft mode.
+
+Required fields per line:
+  lineText          Description of the line item
+  amount            Total amount before VAT — ALWAYS required, even when priceEach and numberOfUnits are provided
+  productTypeXid    Product type ID — use list_product_types to find
+
+Optional fields per line:
+  lineNote          Additional description
+  numberOfUnits     Quantity (e.g. "1", "2", "2.5")
+  unitOfMeasureCode Unit code (e.g. "DAY", "EA") — use list_units_of_measure to find
+  priceEach         Price per unit — also set amount to the same total value
+  productXid        Rarely needed. Does NOT replace productTypeXid — both must be provided if used
+
+Notes:
+  - amount is always required on each line, even when priceEach × numberOfUnits fully defines it
+  - productTypeXid is a number, not a string
+  - linesHaveNumberAndPriceEach shows quantity and unit price columns on the printed invoice
+
+Example lines:
+[
+  {
+    "lineText": "Consulting",
+    "amount": "5000",
+    "productTypeXid": 987654
+  },
+  {
+    "lineText": "Equipment rental",
+    "numberOfUnits": "1",
+    "unitOfMeasureCode": "DAY",
+    "priceEach": "4000",
+    "amount": "4000",
+    "productTypeXid": 987655
+  }
+]`,
   inputSchema: {
     companyXid: z.number().describe('Company ID'),
     customerXid: z.number().describe('Customer ID'),

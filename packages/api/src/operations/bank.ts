@@ -36,7 +36,7 @@ export const getBankPostingsOp = {
   description: 'Get bank postings for a specific bank account, optionally filtered by date range',
   inputSchema: {
     companyXid: z.number().describe('Company ID'),
-    bankAccountXid: z.number().describe('Bank account ID — use list_bank_accounts to find'),
+    bankAccountXid: z.number().describe('Bank account ID'),
     fromDate: z.string().optional().describe('Include postings from this date, e.g. 2026-01-01'),
     toDate: z.string().optional().describe('Include postings up to and including this date'),
   },

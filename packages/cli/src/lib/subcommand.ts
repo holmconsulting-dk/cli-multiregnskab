@@ -3,7 +3,7 @@ import { Command } from 'commander'
 export interface SubCommandConfig {
   name: string
   description: string
-  info: string
+  info?: string
   setup?: (cmd: Command) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: (...args: any[]) => void | Promise<void>
@@ -20,7 +20,7 @@ export function createSubCommand(config: SubCommandConfig): Command {
     new Command('info')
       .description(`Show info about the ${config.name} command`)
       .action(() => {
-        console.log(config.info)
+        console.log(config.info ?? config.description)
 
         const args = cmd.registeredArguments
         if (args.length > 0) {
