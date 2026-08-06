@@ -60,7 +60,7 @@ export async function uploadFileFromPath(
   }
 
   const client = getClient()
-  const { data, error } = await client.POST('/filesForUseInRegistrations', {
+  const { data, error, response } = await client.POST('/filesForUseInRegistrations', {
     body: {
       companyXid,
       fileBodyBase64: buf.toString('base64'),
@@ -74,7 +74,7 @@ export async function uploadFileFromPath(
   })
 
   if (error || !data) {
-    apiError(cmd, `Failed to upload file: ${path}`, error)
+    apiError(cmd, `Failed to upload file: ${path}`, error, response)
   }
 
   return data.xid

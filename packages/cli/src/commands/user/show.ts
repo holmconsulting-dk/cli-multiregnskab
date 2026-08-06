@@ -4,10 +4,10 @@ import { apiError } from '../../lib/error.js'
 
 export async function show(_options: unknown, cmd: Command) {
   const client = getClient()
-  const { data, error } = await client.GET('/user').catch((e) => apiError(cmd, 'Failed to retrieve user information.', e))
+  const { data, error, response } = await client.GET('/user')
 
   if (error || !data) {
-    apiError(cmd, 'Failed to retrieve user information.', error)
+    apiError(cmd, 'Failed to retrieve user information.', error, response)
   }
 
   console.log(`Username:  ${data.userName ?? '-'}`)
