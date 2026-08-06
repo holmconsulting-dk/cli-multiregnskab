@@ -1,25 +1,9 @@
 {
-  "name": "@holmconsulting/cli-multiregnskab",
-  "version": "0.1.0",
-  "type": "module",
-  "bin": {
-    "mr": "./dist/index.js"
-  },
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "bun build src/index.ts --target node --define '__VERSION__=\"dev\"' --outfile dist/index.js && chmod +x dist/index.js",
-    "test": "bun test tests/",
-    "dev": "bun run src/index.ts",
-    "prepublishOnly": "bun run build",
-    "generate-api": "openapi-typescript public-client-api-v1.yaml -o src/api/types.ts",
-    "prepare": "bun run build"
-  },
-  "dependencies": {
-    "commander": "^12.0.0",
-    "openapi-fetch": "^0.13.5"
-  },
-  "devDependencies": {
-    "@types/node": "^25.3.5",
-    "openapi-typescript": "^7.8.0",
-    "typescript": "^5.0.0"
+    "generate-api": "bun run --cwd packages/api generate-api",
+    "build": "bun run --cwd packages/api build && bun run --cwd packages/cli build",
+    "dev": "bun run --cwd packages/cli dev",
+    "test": "bun run --cwd packages/api test && bun run --cwd packages/cli test"
   }
 }
