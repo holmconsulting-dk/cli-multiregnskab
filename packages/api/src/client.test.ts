@@ -1,5 +1,5 @@
 import { test, expect, afterEach } from 'bun:test'
-import { createClient, AuthenticationError } from './client.js'
+import { createClient, createUnauthenticatedClient, loginWithPassword, AuthenticationError, DEFAULT_BASE_URL } from './client.js'
 import type { StoredAuth } from './client.js'
 
 const FUTURE = '2099-01-01T00:00:00.000Z'
@@ -32,6 +32,68 @@ function mockFetch(...responses: Response[]) {
   let i = 0
   globalThis.fetch = async () => responses[i++] ?? makeResponse(500)
 }
+
+function mockFetchRecordingUrls(...responses: Response[]) {
+  const urls: string[] = []
+  let i = 0
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    urls.push(input instanceof Request ? input.url : String(input))
+    return responses[i++] ?? makeResponse(500)
+  }
+  return urls
+}
+
+// ---------------------------------------------------------------------------
+// configurable baseUrl
+// ---------------------------------------------------------------------------
+
+test('createClient sends requests and token refreshes to the configured baseUrl', async () => {
+  const customBaseUrl = 'https://staging.example.com/api/v1'
+  const urls = mockFetchRecordingUrls(
+    makeResponse(401),                                            // initial /user call
+    makeResponse(200, refreshedAuth),                            // /refreshToken
+    makeResponse(200, { userName: 'test', realName: 'Test' }),   // retry /user
+  )
+
+  const client = createClient({
+    getAuth: () => validAuth,
+    onAuthUpdated: () => {},
+    baseUrl: customBaseUrl,
+  })
+
+  await client.GET('/user')
+
+  expect(urls.every((url) => url.startsWith(customBaseUrl))).toBe(true)
+  expect(urls.some((url) => url.startsWith(DEFAULT_BASE_URL))).toBe(false)
+})
+
+test('createClient falls back to DEFAULT_BASE_URL when baseUrl is omitted', async () => {
+  const urls = mockFetchRecordingUrls(makeResponse(200, { userName: 'test', realName: 'Test' }))
+
+  const client = createClient({ getAuth: () => validAuth, onAuthUpdated: () => {} })
+  await client.GET('/user')
+
+  expect(urls[0]?.startsWith(DEFAULT_BASE_URL)).toBe(true)
+})
+
+test('createUnauthenticatedClient uses the configured baseUrl', async () => {
+  const customBaseUrl = 'https://staging.example.com/api/v1'
+  const urls = mockFetchRecordingUrls(makeResponse(200, []))
+
+  const client = createUnauthenticatedClient({ baseUrl: customBaseUrl })
+  await client.GET('/companies')
+
+  expect(urls[0]?.startsWith(customBaseUrl)).toBe(true)
+})
+
+test('loginWithPassword uses the configured baseUrl', async () => {
+  const customBaseUrl = 'https://staging.example.com/api/v1'
+  const urls = mockFetchRecordingUrls(makeResponse(200, validAuth))
+
+  await loginWithPassword('user', 'pass', { baseUrl: customBaseUrl })
+
+  expect(urls[0]?.startsWith(customBaseUrl)).toBe(true)
+})
 
 // ---------------------------------------------------------------------------
 // onResponse 401 handling (backend-side revocation)

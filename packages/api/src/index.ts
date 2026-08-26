@@ -1,4 +1,13 @@
-export { createClient, createUnauthenticatedClient, loginWithPassword, readAuth, writeAuth, clearAuth, AuthenticationError } from './client.js'
+export {
+  createClient,
+  createUnauthenticatedClient,
+  loginWithPassword,
+  readAuth,
+  writeAuth,
+  clearAuth,
+  AuthenticationError,
+  DEFAULT_BASE_URL,
+} from './client.js'
 export type { StoredAuth, AuthConfig } from './client.js'
 export type { paths, components } from './types.js'
 export { createOperations } from './operations/index.js'
