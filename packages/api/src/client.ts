@@ -5,7 +5,7 @@ import { homedir } from 'os'
 import { join } from 'path'
 import type { paths } from './types.js'
 
-const BASE_URL = 'https://www.multiregnskab.dk/open/clientapi/v1'
+export const DEFAULT_BASE_URL = 'https://www.multiregnskab.dk/open/clientapi/v1'
 const AUTH_FILE = join(homedir(), '.config', 'mr', 'auth.json')
 
 export interface StoredAuth {
@@ -17,6 +17,7 @@ export interface StoredAuth {
 export interface AuthConfig {
   getAuth: () => StoredAuth | null | Promise<StoredAuth | null>
   onAuthUpdated: (auth: StoredAuth) => void | Promise<void>
+  baseUrl?: string
 }
 
 export class AuthenticationError extends Error {
@@ -50,8 +51,8 @@ function isTokenExpired(tokenExpires: string): boolean {
   return new Date(tokenExpires) <= new Date()
 }
 
-async function refreshToken(expiredAuth: StoredAuth): Promise<StoredAuth | null> {
-  const response = await fetch(`${BASE_URL}/refreshToken`, {
+async function refreshToken(expiredAuth: StoredAuth, baseUrl: string): Promise<StoredAuth | null> {
+  const response = await fetch(`${baseUrl}/refreshToken`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -68,8 +69,13 @@ async function refreshToken(expiredAuth: StoredAuth): Promise<StoredAuth | null>
   }
 }
 
-export async function loginWithPassword(username: string, password: string): Promise<StoredAuth> {
-  const client = createFetchClient<paths>({ baseUrl: BASE_URL })
+export async function loginWithPassword(
+  username: string,
+  password: string,
+  options?: { baseUrl?: string },
+): Promise<StoredAuth> {
+  const baseUrl = options?.baseUrl ?? DEFAULT_BASE_URL
+  const client = createFetchClient<paths>({ baseUrl })
   const { data, error, response } = await client.POST('/login', {
     body: { userName: username, password },
   })
@@ -90,7 +96,8 @@ export async function loginWithPassword(username: string, password: string): Pro
 }
 
 export function createClient(config: AuthConfig) {
-  const client = createFetchClient<paths>({ baseUrl: BASE_URL })
+  const baseUrl = config.baseUrl ?? DEFAULT_BASE_URL
+  const client = createFetchClient<paths>({ baseUrl })
   const pendingRequests = new WeakMap<Request, Request>()
 
   const authMiddleware: Middleware = {
@@ -104,7 +111,7 @@ export function createClient(config: AuthConfig) {
         return request
       }
 
-      const refreshed = await refreshToken(auth)
+      const refreshed = await refreshToken(auth, baseUrl)
       if (!refreshed) throw new AuthenticationError('Session expired. Please log in again.')
       await config.onAuthUpdated(refreshed)
       request.headers.set('Authorization', `Bearer ${refreshed.token}`)
@@ -124,7 +131,7 @@ export function createClient(config: AuthConfig) {
       const auth = await config.getAuth()
       if (!auth) throw new AuthenticationError('Session expired. Please log in again.')
 
-      const refreshed = await refreshToken(auth)
+      const refreshed = await refreshToken(auth, baseUrl)
       if (!refreshed) throw new AuthenticationError('Session expired. Please log in again.')
       await config.onAuthUpdated(refreshed)
 
@@ -144,6 +151,6 @@ export function createClient(config: AuthConfig) {
   return client
 }
 
-export function createUnauthenticatedClient() {
-  return createFetchClient<paths>({ baseUrl: BASE_URL })
+export function createUnauthenticatedClient(options?: { baseUrl?: string }) {
+  return createFetchClient<paths>({ baseUrl: options?.baseUrl ?? DEFAULT_BASE_URL })
 }
