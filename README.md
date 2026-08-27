@@ -2,6 +2,9 @@
 
 A command-line interface for the [Multiregnskab](https://multiregnskab.dk) accounting API. Installed as `mr`.
 
+See [`docs/architecture.md`](docs/architecture.md) for the repository's package structure
+and the layers inside the API package.
+
 ## Prerequisites
 
 [Bun](https://bun.sh)

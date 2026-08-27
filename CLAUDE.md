@@ -26,6 +26,10 @@ Or scoped:
 
 ## Architecture
 
+See [`docs/architecture.md`](docs/architecture.md) for a fuller explanation, including the
+split between the generated-types layer and the hand-written operations layer inside
+`packages/api`.
+
 ### `packages/api`
 
 - `src/client.ts` — openapi-fetch client, auth middleware, token refresh, auth file I/O
